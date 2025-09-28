@@ -34,16 +34,6 @@ impl EnergyLevel {
         }
     }
 
-    /// Check if energy level allows for basic movement
-    pub fn can_move(&self) -> bool {
-        *self > EnergyLevel::Collapsed
-    }
-
-    /// Check if energy level allows for intensive activities
-    pub fn can_run(&self) -> bool {
-        *self >= EnergyLevel::Normal
-    }
-
     /// Get the display name for this energy level
     pub fn name(&self) -> &'static str {
         match self {
@@ -99,15 +89,6 @@ mod tests {
         assert_eq!(EnergyLevel::from_points(65), EnergyLevel::Normal);
         assert_eq!(EnergyLevel::from_points(85), EnergyLevel::Energetic);
         assert_eq!(EnergyLevel::from_points(95), EnergyLevel::Hyperactive);
-    }
-
-    #[test]
-    fn test_energy_level_capabilities() {
-        assert!(!EnergyLevel::Collapsed.can_move());
-        assert!(EnergyLevel::Exhausted.can_move());
-
-        assert!(!EnergyLevel::Tired.can_run());
-        assert!(EnergyLevel::Normal.can_run());
     }
 
     #[test]
