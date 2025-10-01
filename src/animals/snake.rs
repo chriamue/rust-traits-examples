@@ -1,34 +1,35 @@
 use crate::animals::Animal;
-use crate::behaviors::moving::Moving;
-use crate::behaviors::swimming::Swimming;
+use crate::behaviors::{moving::Moving, swimming::Swimming};
 use crate::core::{EnergyLevel, HasEnergy};
 
 #[derive(Debug)]
-pub struct Whale {
+pub struct Snake {
     name: String,
     energy: EnergyLevel,
+    is_aquatic: bool,
 }
 
-impl Whale {
-    pub fn new(name: String) -> Self {
+impl Snake {
+    pub fn new(name: String, is_aquatic: bool) -> Self {
         Self {
             name,
             energy: EnergyLevel::Normal,
+            is_aquatic,
         }
     }
 }
 
-impl Animal for Whale {
+impl Animal for Snake {
     fn name(&self) -> String {
         self.name.clone()
     }
 
     fn species(&self) -> &'static str {
-        "Whale"
+        "Snake"
     }
 }
 
-impl HasEnergy for Whale {
+impl HasEnergy for Snake {
     fn energy(&self) -> EnergyLevel {
         self.energy
     }
@@ -38,10 +39,15 @@ impl HasEnergy for Whale {
     }
 }
 
-impl Moving for Whale {}
+impl Moving for Snake {}
 
-impl Swimming for Whale {
+// Only aquatic snakes can swim
+impl Swimming for Snake {
     fn max_depth(&self) -> u32 {
-        2000 // Whales can dive very deep
+        if self.is_aquatic {
+            50
+        } else {
+            0 // Non-aquatic snakes can't really swim
+        }
     }
 }

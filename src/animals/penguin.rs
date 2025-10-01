@@ -1,15 +1,14 @@
 use crate::animals::Animal;
-use crate::behaviors::moving::Moving;
-use crate::behaviors::swimming::Swimming;
+use crate::behaviors::{moving::Moving, swimming::Swimming, walking::Walking};
 use crate::core::{EnergyLevel, HasEnergy};
 
 #[derive(Debug)]
-pub struct Whale {
+pub struct Penguin {
     name: String,
     energy: EnergyLevel,
 }
 
-impl Whale {
+impl Penguin {
     pub fn new(name: String) -> Self {
         Self {
             name,
@@ -18,17 +17,17 @@ impl Whale {
     }
 }
 
-impl Animal for Whale {
+impl Animal for Penguin {
     fn name(&self) -> String {
         self.name.clone()
     }
 
     fn species(&self) -> &'static str {
-        "Whale"
+        "Penguin"
     }
 }
 
-impl HasEnergy for Whale {
+impl HasEnergy for Penguin {
     fn energy(&self) -> EnergyLevel {
         self.energy
     }
@@ -38,10 +37,11 @@ impl HasEnergy for Whale {
     }
 }
 
-impl Moving for Whale {}
+impl Moving for Penguin {}
+impl Walking for Penguin {}
 
-impl Swimming for Whale {
+impl Swimming for Penguin {
     fn max_depth(&self) -> u32 {
-        2000 // Whales can dive very deep
+        500 // Penguins are excellent divers
     }
 }

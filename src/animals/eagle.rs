@@ -1,34 +1,33 @@
 use crate::animals::Animal;
-use crate::behaviors::moving::Moving;
-use crate::behaviors::swimming::Swimming;
+use crate::behaviors::{flying::Flying, moving::Moving, walking::Walking};
 use crate::core::{EnergyLevel, HasEnergy};
 
 #[derive(Debug)]
-pub struct Whale {
+pub struct Eagle {
     name: String,
     energy: EnergyLevel,
 }
 
-impl Whale {
+impl Eagle {
     pub fn new(name: String) -> Self {
         Self {
             name,
-            energy: EnergyLevel::Normal,
+            energy: EnergyLevel::Energetic, // Eagles start with high energy
         }
     }
 }
 
-impl Animal for Whale {
+impl Animal for Eagle {
     fn name(&self) -> String {
         self.name.clone()
     }
 
     fn species(&self) -> &'static str {
-        "Whale"
+        "Eagle"
     }
 }
 
-impl HasEnergy for Whale {
+impl HasEnergy for Eagle {
     fn energy(&self) -> EnergyLevel {
         self.energy
     }
@@ -38,10 +37,11 @@ impl HasEnergy for Whale {
     }
 }
 
-impl Moving for Whale {}
+impl Moving for Eagle {}
+impl Walking for Eagle {}
 
-impl Swimming for Whale {
-    fn max_depth(&self) -> u32 {
-        2000 // Whales can dive very deep
+impl Flying for Eagle {
+    fn max_altitude(&self) -> u32 {
+        3000 // Eagles can fly very high
     }
 }
