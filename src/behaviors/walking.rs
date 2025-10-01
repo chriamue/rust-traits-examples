@@ -1,4 +1,4 @@
-use crate::behaviors::moving::{Moving, MovingError, MovingResult};
+use crate::behaviors::moving::{Moving, MovingError};
 use crate::core::{EnergyLevel, HasEnergy};
 use thiserror::Error;
 
