@@ -2,6 +2,20 @@
 name = "rust-traits-examples"
 version = "0.1.0"
 edition = "2024"
+authors = ["Christian M"]
+description = "Comprehensive demonstration of trait composition in Rust"
+license = "MIT"
+repository = "https://github.com/chriamue/rust-traits-examples"
+keywords = ["traits", "composition", "oop", "examples", "tutorial"]
+categories = ["education", "examples"]
 
 [dependencies]
 thiserror = "2.0"
+
+[[example]]
+name = "triathlon_competition"
+path = "examples/triathlon_competition.rs"
+
+[[example]]
+name = "relay_competition"
+path = "examples/relay_competition.rs"
