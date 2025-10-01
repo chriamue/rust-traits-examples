@@ -159,7 +159,7 @@ pub trait Driving: Moving + HasEnergy {
         let efficiency = self.fuel_efficiency();
 
         // Calculate required energy based on distance and efficiency
-        let energy_needed = (distance_km + efficiency - 1) / efficiency; // Ceiling division
+        let energy_needed = distance_km.div_ceil(efficiency); // Ceiling division
 
         if current_energy as u32 <= energy_needed {
             return Err(DrivingError::InsufficientEnergyForDriving {
