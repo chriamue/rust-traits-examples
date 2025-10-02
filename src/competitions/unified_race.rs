@@ -276,7 +276,7 @@ where
         // Test 3: Terrain navigation (if enough energy)
         print!("    Test 3 - Terrain: ");
         let test3_result = if self.land_mover.energy() >= EnergyLevel::Tired {
-            let result = self.land_mover.navigate_terrain("rocky");
+            let result = self.land_mover.navigate_terrain("rocky".into());
             let success = result.is_ok();
             if success {
                 println!("✅ {}", result.as_ref().unwrap());

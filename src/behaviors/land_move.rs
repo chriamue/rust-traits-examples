@@ -4,7 +4,7 @@
 //! over both walking and driving capabilities.
 
 use crate::behaviors::moving::{Moving, MovingError};
-use crate::core::{EnergyLevel, HasEnergy};
+use crate::core::{EnergyLevel, HasEnergy, Terrain};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -90,18 +90,10 @@ pub trait LandMove: Moving + HasEnergy {
         }
     }
 
-    /// Navigate different terrain types - mirrors walk_on_terrain()
-    fn navigate_terrain(&mut self, terrain: &str) -> LandMoveResult {
+    /// Navigate different terrain types - now uses Terrain enum
+    fn navigate_terrain(&mut self, terrain: Terrain) -> LandMoveResult {
         let current_energy = self.energy();
-
-        let required_energy = match terrain {
-            "road" | "pavement" => EnergyLevel::Exhausted,
-            "grass" | "dirt" => EnergyLevel::Tired,
-            "rocky" | "sandy" => EnergyLevel::Normal,
-            "steep" | "muddy" => EnergyLevel::Energetic,
-            "extreme" => EnergyLevel::Hyperactive,
-            _ => EnergyLevel::Normal,
-        };
+        let required_energy = terrain.required_energy_level();
 
         if current_energy < required_energy {
             return Err(LandMoveError::TerrainToodifficult {
@@ -112,15 +104,7 @@ pub trait LandMove: Moving + HasEnergy {
             });
         }
 
-        let terrain_energy_cost = match terrain {
-            "road" | "pavement" => 0,
-            "grass" | "dirt" => 0, // Don't consume extra, just the base land_move cost
-            "rocky" | "sandy" => 1,
-            "steep" | "muddy" => 2,
-            "extreme" => 3, // Reduced from 4 to avoid over-consumption
-            _ => 0,
-        };
-
+        let terrain_energy_cost = terrain.energy_cost();
         if terrain_energy_cost > 0 {
             self.consume_energy_levels(terrain_energy_cost);
         }
@@ -244,9 +228,9 @@ mod tests {
             energy: EnergyLevel::Hyperactive, // Start with maximum energy
         };
 
-        let result = mover.navigate_terrain("extreme");
+        let result = mover.navigate_terrain(Terrain::Extreme);
         assert!(result.is_ok());
-        // extreme terrain: 3 energy for terrain + 1 for land_move = 4 total
+        // Extreme terrain: 3 energy for terrain + 1 for land_move = 4 total
         // Hyperactive (5) -> 4 consumed = Exhausted (1)
         assert_eq!(mover.energy(), EnergyLevel::Exhausted);
     }
@@ -270,11 +254,11 @@ mod tests {
             energy: EnergyLevel::Normal, // Not enough for extreme terrain
         };
 
-        let result = mover.navigate_terrain("extreme");
+        let result = mover.navigate_terrain(Terrain::Extreme);
         assert!(result.is_err());
         // Should match the TerrainToodifficult error
         if let Err(LandMoveError::TerrainToodifficult { terrain }) = result {
-            assert!(terrain.contains("extreme"));
+            assert!(terrain.contains("Extreme")); // Updated to match Display format
             assert!(terrain.contains("too difficult"));
         } else {
             panic!("Expected TerrainToodifficult error");
@@ -296,5 +280,30 @@ mod tests {
         } else {
             panic!("Expected InsufficientEnergyForLandMove error");
         }
+    }
+
+    #[test]
+    fn test_various_terrains() {
+        let mut mover = TestLandMover {
+            energy: EnergyLevel::Hyperactive,
+        };
+
+        // Test easy terrain
+        let result = mover.navigate_terrain(Terrain::Road);
+        assert!(result.is_ok());
+
+        // Reset energy
+        mover.set_energy(EnergyLevel::Hyperactive);
+
+        // Test moderate terrain
+        let result = mover.navigate_terrain(Terrain::Rocky);
+        assert!(result.is_ok());
+
+        // Reset energy
+        mover.set_energy(EnergyLevel::Hyperactive);
+
+        // Test difficult terrain
+        let result = mover.navigate_terrain(Terrain::Mountain);
+        assert!(result.is_ok());
     }
 }
