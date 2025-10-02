@@ -7,7 +7,6 @@
 use rust_traits_examples::vehicles::{airplane, car, helicopter, ship};
 use rust_traits_examples::{
     animals::*,
-    behaviors::land_move::LandMove,
     behaviors::*,
     competitions::unified_race::*,
     core::{EnergyLevel, HasEnergy},
@@ -40,25 +39,23 @@ fn demonstrate_landmove_abstraction() {
 
     println!("🐾 WALKING ANIMALS:");
     println!("  ✅ Dogs, Eagles, Ducks, Penguins can walk");
-    println!("  ✅ All implement LandMove directly through sealed trait approach");
-    println!("  ✅ Speed: 3-15 km/h depending on energy");
-    println!("  ✅ High efficiency: ~100 km per energy unit");
+    println!("  ✅ All implement LandMove through default trait implementation");
+    println!("  ✅ Speed varies by energy level and species");
+    println!("  ✅ High efficiency for biological movement");
 
     println!("\n🚗 DRIVING VEHICLES:");
     println!("  ✅ Cars, Motorcycles, Airplanes can drive");
-    println!("  ✅ All implement LandMove directly through sealed trait approach");
+    println!("  ✅ All implement LandMove through default trait implementation");
     println!("  ✅ Speed: 80-200+ km/h depending on vehicle type");
-    println!("  ✅ Variable efficiency: 15-120 km per energy unit");
+    println!("  ✅ Variable efficiency based on engine type");
 
     println!("\n🌐 UNIFIED INTERFACE:");
     println!("  ```rust");
-    println!("  pub trait LandMove: Moving + HasEnergy + sealed::Sealed {{");
-    println!("      fn max_land_speed(&self) -> u32;");
-    println!("      fn land_efficiency(&self) -> u32;");
-    println!("      fn land_mover_name(&self) -> String;");
-    println!("      fn land_mover_type(&self) -> String;");
+    println!("  pub trait LandMove: Moving + HasEnergy {{");
     println!("      fn land_move(&mut self) -> LandMoveResult;");
+    println!("      fn land_move_fast(&mut self) -> LandMoveResult;");
     println!("      fn navigate_terrain(&mut self, terrain: &str) -> LandMoveResult;");
+    println!("      fn land_move_at_intensity(&mut self, intensity: &str) -> LandMoveResult;");
     println!("  }}");
     println!("  ```");
 
@@ -99,10 +96,10 @@ fn run_unified_competitions() {
     fighter_jet.set_energy(EnergyLevel::Normal);
 
     println!(
-        "    🐕 Land Mover: {} ({}) - Max Speed: {} km/h",
-        dog.land_mover_name(),
-        dog.land_mover_type(),
-        dog.max_land_speed()
+        "    🐕 Land Mover: {} ({}) - Energy: {}",
+        dog.name(),
+        dog.species(),
+        dog.energy()
     );
     println!(
         "    🐋 Swimmer: {} - Max Depth: {} m",
@@ -117,7 +114,7 @@ fn run_unified_competitions() {
 
     let mut team1 = UnifiedRaceTeam::new(
         "Nature Meets Technology".to_string(),
-        dog,         // Dog directly implements LandMove
+        dog,         // Dog implements LandMove
         whale,       // Swimming
         fighter_jet, // Flying
     );
@@ -164,10 +161,10 @@ fn run_unified_competitions() {
     helicopter.set_energy(EnergyLevel::Normal);
 
     println!(
-        "    🏎️  Land Mover: {} ({}) - Max Speed: {} km/h",
-        sports_car.land_mover_name(),
-        sports_car.land_mover_type(),
-        sports_car.max_land_speed()
+        "    🏎️  Land Mover: {} ({}) - Energy: {}",
+        sports_car.name(),
+        sports_car.vehicle_type(),
+        sports_car.energy()
     );
     println!(
         "    🚤 Swimmer: {} - Surface Speed Specialist (Max Depth: {}m)",
@@ -182,7 +179,7 @@ fn run_unified_competitions() {
 
     let mut team2 = UnifiedRaceTeam::new(
         "Mechanical Mastery".to_string(),
-        sports_car, // Car directly implements LandMove
+        sports_car, // Car implements LandMove
         speedboat,  // Swimming
         helicopter, // Flying
     );
@@ -208,10 +205,10 @@ fn run_unified_competitions() {
     eagle.set_energy(EnergyLevel::Hyperactive);
 
     println!(
-        "    🚗 Land Mover: {} ({}) - Efficiency: {} km/energy",
-        electric_car.land_mover_name(),
-        electric_car.land_mover_type(),
-        electric_car.land_efficiency()
+        "    🚗 Land Mover: {} ({}) - Energy: {}",
+        electric_car.name(),
+        electric_car.vehicle_type(),
+        electric_car.energy()
     );
     println!(
         "    🐧 Swimmer: {} - Max Depth: {} m",
@@ -226,7 +223,7 @@ fn run_unified_competitions() {
 
     let mut team3 = UnifiedRaceTeam::new(
         "Balanced Hybrid".to_string(),
-        electric_car, // Car directly implements LandMove
+        electric_car, // Car implements LandMove
         penguin,      // Swimming
         eagle,        // Flying
     );
@@ -255,6 +252,40 @@ fn run_unified_competitions() {
     // Display results
     competition.display_results();
     competition.analyze_abstraction_benefits();
+
+    // Run extended races to showcase all LandMove functions
+    println!("\n🚀 EXTENDED RACES - TESTING ALL LANDMOVE FUNCTIONS");
+    println!("==================================================");
+
+    // Reset teams for extended race
+    let mut dog2 = Dog::new("Endurance Runner".to_string(), "Husky".to_string());
+    dog2.set_energy(EnergyLevel::Hyperactive);
+
+    let mut whale2 = Whale::new("Deep Diver".to_string());
+    whale2.set_energy(EnergyLevel::Energetic);
+
+    let mut jet2 = Airplane::new(
+        "Thunder Bolt".to_string(),
+        "SkyTech".to_string(),
+        2023,
+        airplane::AirplaneType::Military,
+        12,
+        airplane::AirplaneEngine::Jet {
+            engines: 1,
+            thrust_each: 350,
+        },
+    );
+    jet2.set_energy(EnergyLevel::Hyperactive);
+
+    let mut extended_team =
+        UnifiedRaceTeam::new("Extended Test Team".to_string(), dog2, whale2, jet2);
+
+    println!("\n📊 EXTENDED RACE: Testing all 4 LandMove functions");
+    println!("{}", "-".repeat(50));
+    let extended_result = extended_team.extended_race();
+
+    println!("\n🎯 Extended Race Result:");
+    println!("{}", extended_result);
 }
 
 fn analyze_abstraction_power() {
@@ -269,57 +300,50 @@ fn analyze_abstraction_power() {
     println!("   ✅ Consistent interface for all land-based movement");
     println!("   ✅ Natural grouping of related behaviors");
 
-    println!("\n2. 🔄 SEALED TRAIT IMPLEMENTATION:");
-    println!("   Individual implementations for each concrete type:");
+    println!("\n2. 🔄 SIMPLIFIED IMPLEMENTATION:");
+    println!("   Default trait implementation for all land movers:");
     println!("   ```rust");
-    println!("   impl sealed::Sealed for Dog {{}}");
-    println!("   impl LandMove for Dog {{ /* walking behavior */ }}");
-    println!("   ");
-    println!("   impl sealed::Sealed for Car {{}}");
-    println!("   impl LandMove for Car {{ /* driving behavior */ }}");
+    println!("   impl LandMove for Dog {{}} // Uses default walking implementation");
+    println!("   impl LandMove for Car {{}} // Uses default driving implementation");
     println!("   ```");
-    println!("   ✅ No conflicting blanket implementations");
-    println!("   ✅ Explicit control over which types can be land movers");
-    println!("   ✅ Direct trait implementation without wrappers");
+    println!("   ✅ No complex sealed trait setup needed");
+    println!("   ✅ Direct trait implementation");
+    println!("   ✅ Leverages existing Walking and Driving traits");
 
     println!("\n3. 🎪 COMPETITION SIMPLIFICATION:");
-    println!("   Before LandMove (hypothetical, not valid Rust):");
+    println!("   Clean constraint for unified races:");
     println!("   ```rust");
-    println!("   // Complex constraint - either walking OR driving");
-    println!("   struct Team<L> where L: (Walking | Driving) + HasEnergy // ❌ Not valid Rust");
+    println!("   struct UnifiedRaceTeam<L> where L: LandMove {{ }}");
     println!("   ```");
-    println!("   ");
-    println!("   After LandMove:");
-    println!("   ```rust");
-    println!("   // Simple, elegant constraint");
-    println!("   struct UnifiedRaceTeam<L> where L: LandMove {{ }} // ✅ Clean and clear");
-    println!("   ```");
+    println!("   ✅ Simple, elegant constraint");
+    println!("   ✅ Works with both animals and vehicles");
 
     println!("\n4. 🌍 CROSS-DOMAIN COMPATIBILITY:");
     println!("   ✅ Animals and vehicles compete naturally in same leg");
     println!("   ✅ Fair comparison based on land movement capability");
     println!("   ✅ No artificial distinctions between biological and mechanical");
 
-    println!("\n5. 🚀 EXTENSIBILITY:");
-    println!("   Adding new land movers requires explicit opt-in:");
+    println!("\n5. 🚀 FOUR CORE FUNCTIONS:");
     println!("   ```rust");
-    println!("   struct Bicycle {{ /* ... */ }}");
-    println!("   impl sealed::Sealed for Bicycle {{}}");
-    println!("   impl LandMove for Bicycle {{");
-    println!("       fn max_land_speed(&self) -> u32 {{ 25 }}");
-    println!("       // ... other methods");
+    println!("   trait LandMove {{");
+    println!("       fn land_move(&mut self);              // Basic movement");
+    println!("       fn land_move_fast(&mut self);         // Fast movement");
+    println!("       fn navigate_terrain(&mut self, terrain); // Terrain handling");
+    println!("       fn land_move_at_intensity(&mut self, intensity); // Variable intensity");
     println!("   }}");
-    println!("   // ✅ Bicycle can now participate in land movement!");
     println!("   ```");
+    println!("   ✅ Comprehensive movement testing");
+    println!("   ✅ Energy-aware implementations");
+    println!("   ✅ Consistent behavior across types");
 
     println!("\n🏆 DESIGN PATTERN SUCCESS:");
     println!("==========================");
 
     println!("\n📚 LESSONS LEARNED:");
-    println!("   1. 🎯 Sealed traits prevent conflicting implementations");
-    println!("   2. 🧩 Individual implementations provide maximum control");
+    println!("   1. 🎯 Intermediate traits simplify complex constraints");
+    println!("   2. 🧩 Default implementations reduce boilerplate");
     println!("   3. 🌐 Abstract over similarities, preserve differences");
-    println!("   4. 🔄 Explicit trait boundaries enable flexible designs");
+    println!("   4. 🔄 Leverage existing trait hierarchies");
     println!("   5. 🛡️  Type safety maintained while increasing flexibility");
 
     println!("\n🌟 REAL-WORLD APPLICATIONS:");
@@ -328,10 +352,10 @@ fn analyze_abstraction_power() {
     println!("   🤖 Robotics: Abstract over legs, wheels, tracks, etc.");
     println!("   📱 UI Frameworks: Abstract over different input methods");
 
-    println!("\n🎉 SEALED TRAIT SUCCESS! 🎉");
-    println!("================================");
+    println!("\n🎉 LANDMOVE TRAIT SUCCESS! 🎉");
+    println!("===============================");
     println!("🌟 LandMove elegantly unifies walking and driving!");
     println!("🌟 Animals and vehicles compete naturally together!");
-    println!("🌟 Sealed traits provide explicit control and safety!");
+    println!("🌟 Four core functions provide comprehensive testing!");
     println!("🌟 The power of thoughtful abstraction in Rust! 🦀");
 }
