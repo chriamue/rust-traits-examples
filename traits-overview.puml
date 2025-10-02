@@ -1,0 +1,81 @@
+@startuml Simple Traits Overview
+
+!define TRAIT_COLOR #E8F4FD
+!define ANIMAL_COLOR #E8F5E8
+!define VEHICLE_COLOR #FFF2E8
+
+package "Core Traits" {
+    interface HasEnergy TRAIT_COLOR
+    interface Moving TRAIT_COLOR
+}
+
+package "Behavior Traits" {
+    interface Walking TRAIT_COLOR
+    interface Swimming TRAIT_COLOR
+    interface Flying TRAIT_COLOR
+    interface Driving TRAIT_COLOR
+    interface LandMove TRAIT_COLOR
+}
+
+package "Animals" {
+    class Duck ANIMAL_COLOR
+    class Dog ANIMAL_COLOR
+    class Eagle ANIMAL_COLOR
+    class Whale ANIMAL_COLOR
+    class Penguin ANIMAL_COLOR
+}
+
+package "Vehicles" {
+    class Car VEHICLE_COLOR
+    class Ship VEHICLE_COLOR
+    class Airplane VEHICLE_COLOR
+    class Helicopter VEHICLE_COLOR
+}
+
+' Core dependencies
+Walking --|> Moving
+Swimming --|> Moving
+Flying --|> Moving
+Driving --|> Moving
+LandMove --|> Moving
+Moving --|> HasEnergy
+
+' Animal trait implementations
+Duck ..|> Walking
+Duck ..|> Swimming
+Duck ..|> Flying
+Duck ..|> LandMove
+
+Dog ..|> Walking
+Dog ..|> Swimming
+Dog ..|> LandMove
+
+Eagle ..|> Walking
+Eagle ..|> Flying
+Eagle ..|> LandMove
+
+Whale ..|> Swimming
+
+Penguin ..|> Walking
+Penguin ..|> Swimming
+Penguin ..|> LandMove
+
+' Vehicle trait implementations
+Car ..|> Driving
+Car ..|> LandMove
+
+Ship ..|> Swimming
+
+Airplane ..|> Flying
+Airplane ..|> Driving
+Airplane ..|> LandMove
+
+Helicopter ..|> Flying
+
+note top of LandMove : Unifies Walking + Driving\nfor cross-domain competitions
+
+note top of Duck : Only animal with\nALL movement traits
+
+note top of Airplane : Can fly AND drive\n(taxi on runway)
+
+@enduml

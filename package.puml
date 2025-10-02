@@ -1,0 +1,256 @@
+@startuml Rust Traits Competition System
+
+!define TRAIT_COLOR #E8F4FD
+!define ANIMAL_COLOR #E8F5E8
+!define VEHICLE_COLOR #FFF2E8
+!define COMPETITION_COLOR #F8E8FF
+!define CORE_COLOR #FFEAA7
+
+package "Core Traits" <<Folder>> {
+    interface HasEnergy TRAIT_COLOR {
+        +energy() : EnergyLevel
+        +set_energy(level: EnergyLevel)
+        +can_perform(required: EnergyLevel) : bool
+        +consume_energy()
+        +consume_energy_levels(levels: u8)
+        +rest()
+    }
+
+    interface Moving TRAIT_COLOR {
+        +do_move() : MovingResult
+        +can_move() : bool
+        +movement_energy_cost() : u8
+    }
+}
+
+package "Behavior Traits" <<Folder>> {
+    interface Walking TRAIT_COLOR {
+        +walk() : WalkingResult
+        +run() : WalkingResult
+        +walk_at_pace(pace: WalkingPace) : WalkingResult
+        +walk_on_terrain(terrain: Terrain) : WalkingResult
+        +walking_ability() : u8
+    }
+
+    interface Swimming TRAIT_COLOR {
+        +swim() : SwimmingResult
+        +dive(depth: u32) : SwimmingResult
+        +swim_in_conditions(conditions: &str) : SwimmingResult
+        +max_depth() : u32
+    }
+
+    interface Flying TRAIT_COLOR {
+        +fly() : FlyingResult
+        +fly_with_mode(mode: FlightMode) : FlyingResult
+        +fly_to_altitude(altitude: u32) : FlyingResult
+        +max_altitude() : u32
+    }
+
+    interface Driving TRAIT_COLOR {
+        +drive() : DrivingResult
+        +drive_at_speed(speed: u32) : DrivingResult
+        +drive_on_road(road_type: RoadType) : DrivingResult
+        +max_speed() : u32
+        +fuel_efficiency() : u32
+    }
+
+    interface LandMove TRAIT_COLOR {
+        +land_move() : LandMoveResult
+        +land_move_fast() : LandMoveResult
+        +navigate_terrain(terrain: Terrain) : LandMoveResult
+        +land_move_at_intensity(intensity: Intensity) : LandMoveResult
+    }
+}
+
+package "Entity Traits" <<Folder>> {
+    interface Animal TRAIT_COLOR {
+        +name() : String
+        +species() : &'static str
+        +description() : String
+    }
+
+    interface Vehicle TRAIT_COLOR {
+        +name() : String
+        +vehicle_type() : &'static str
+        +manufacturer() : &str
+        +year() : u32
+        +description() : String
+    }
+}
+
+package "Animals" <<Folder>> {
+    class Duck ANIMAL_COLOR {
+        -name: String
+        -energy: EnergyLevel
+    }
+
+    class Dog ANIMAL_COLOR {
+        -name: String
+        -energy: EnergyLevel
+        -breed: String
+    }
+
+    class Eagle ANIMAL_COLOR {
+        -name: String
+        -energy: EnergyLevel
+    }
+
+    class Whale ANIMAL_COLOR {
+        -name: String
+        -energy: EnergyLevel
+    }
+
+    class Penguin ANIMAL_COLOR {
+        -name: String
+        -energy: EnergyLevel
+    }
+}
+
+package "Vehicles" <<Folder>> {
+    class Car VEHICLE_COLOR {
+        -name: String
+        -manufacturer: String
+        -year: u32
+        -energy: EnergyLevel
+        -engine_type: EngineType
+    }
+
+    class Ship VEHICLE_COLOR {
+        -name: String
+        -manufacturer: String
+        -year: u32
+        -energy: EnergyLevel
+        -ship_type: ShipType
+    }
+
+    class Airplane VEHICLE_COLOR {
+        -name: String
+        -manufacturer: String
+        -year: u32
+        -energy: EnergyLevel
+        -airplane_type: AirplaneType
+    }
+
+    class Helicopter VEHICLE_COLOR {
+        -name: String
+        -manufacturer: String
+        -year: u32
+        -energy: EnergyLevel
+        -helicopter_type: HelicopterType
+    }
+}
+
+package "Competitions" <<Folder>> {
+    class "Triathlon<T>" COMPETITION_COLOR {
+        +add_participant<T: Walking + Swimming + Flying + Animal + HasEnergy>()
+        +get_winner() : Option<&TriathlonResult>
+        +display_results()
+    }
+
+    class "RelayTeam<S,W,F>" COMPETITION_COLOR {
+        +swimmer: S
+        +walker: W
+        +flyer: F
+        +race() : RelayResult
+    }
+
+    class "UnifiedRaceTeam<L,S,F>" COMPETITION_COLOR {
+        +land_mover: L
+        +swimmer: S
+        +flyer: F
+        +race() : UnifiedRaceResult
+    }
+
+    class "VehicleRaceTeam<D,S,F>" COMPETITION_COLOR {
+        +driver: D
+        +swimmer: S
+        +flyer: F
+        +race() : VehicleRaceResult
+    }
+}
+
+' Core trait dependencies
+Walking --|> Moving : extends
+Swimming --|> Moving : extends
+Flying --|> Moving : extends
+Driving --|> Moving : extends
+Moving --|> HasEnergy : extends
+
+' Unified trait
+LandMove --|> Moving : extends
+LandMove --|> HasEnergy : extends
+
+' Animal implementations
+Duck ..|> Animal : implements
+Duck ..|> HasEnergy : implements
+Duck ..|> Walking : implements
+Duck ..|> Swimming : implements
+Duck ..|> Flying : implements
+Duck ..|> LandMove : implements
+
+Dog ..|> Animal : implements
+Dog ..|> HasEnergy : implements
+Dog ..|> Walking : implements
+Dog ..|> Swimming : implements
+Dog ..|> LandMove : implements
+
+Eagle ..|> Animal : implements
+Eagle ..|> HasEnergy : implements
+Eagle ..|> Walking : implements
+Eagle ..|> Flying : implements
+Eagle ..|> LandMove : implements
+
+Whale ..|> Animal : implements
+Whale ..|> HasEnergy : implements
+Whale ..|> Swimming : implements
+
+Penguin ..|> Animal : implements
+Penguin ..|> HasEnergy : implements
+Penguin ..|> Walking : implements
+Penguin ..|> Swimming : implements
+Penguin ..|> LandMove : implements
+
+' Vehicle implementations
+Car ..|> Vehicle : implements
+Car ..|> HasEnergy : implements
+Car ..|> Driving : implements
+Car ..|> LandMove : implements
+
+Ship ..|> Vehicle : implements
+Ship ..|> HasEnergy : implements
+Ship ..|> Swimming : implements
+
+Airplane ..|> Vehicle : implements
+Airplane ..|> HasEnergy : implements
+Airplane ..|> Flying : implements
+Airplane ..|> Driving : implements
+Airplane ..|> LandMove : implements
+
+Helicopter ..|> Vehicle : implements
+Helicopter ..|> HasEnergy : implements
+Helicopter ..|> Flying : implements
+
+' Competition constraints (shown as dependencies)
+"Triathlon<T>" ..> Duck : "Duck: W+S+F"
+"RelayTeam<S,W,F>" ..> Whale : "S: Swimming"
+"RelayTeam<S,W,F>" ..> Dog : "W: Walking"
+"RelayTeam<S,W,F>" ..> Eagle : "F: Flying"
+
+"UnifiedRaceTeam<L,S,F>" ..> Dog : "L: LandMove"
+"UnifiedRaceTeam<L,S,F>" ..> Car : "L: LandMove"
+"UnifiedRaceTeam<L,S,F>" ..> Whale : "S: Swimming"
+"UnifiedRaceTeam<L,S,F>" ..> Airplane : "F: Flying"
+
+"VehicleRaceTeam<D,S,F>" ..> Car : "D: Driving"
+"VehicleRaceTeam<D,S,F>" ..> Ship : "S: Swimming"
+"VehicleRaceTeam<D,S,F>" ..> Helicopter : "F: Flying"
+
+note top of LandMove : **Key Innovation**\nUnifies Walking + Driving\nEnables animals & vehicles\nin same competition leg
+
+note top of "Triathlon<T>" : **Individual Competition**\nRequires ALL traits:\nWalking + Swimming + Flying\nOnly Duck qualifies!
+
+note top of "RelayTeam<S,W,F>" : **Team Specialization**\nEach member contributes\ntheir specialized capability
+
+note top of "UnifiedRaceTeam<L,S,F>" : **Cross-Domain Teams**\nAnimals & vehicles compete\ntogether via LandMove abstraction
+
+@enduml
