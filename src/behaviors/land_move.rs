@@ -4,7 +4,7 @@
 //! over both walking and driving capabilities.
 
 use crate::behaviors::moving::{Moving, MovingError};
-use crate::core::{EnergyLevel, HasEnergy, Terrain};
+use crate::core::{EnergyLevel, HasEnergy, Intensity, Terrain};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -115,19 +115,10 @@ pub trait LandMove: Moving + HasEnergy {
         }
     }
 
-    /// Land movement at specific performance level - mirrors drive_at_speed() / enhanced terrain
-    fn land_move_at_intensity(&mut self, intensity: &str) -> LandMoveResult {
+    /// Land movement at specific intensity level - now uses Intensity enum
+    fn land_move_at_intensity(&mut self, intensity: Intensity) -> LandMoveResult {
         let current_energy = self.energy();
-
-        // Different intensities require different energy levels
-        let required_energy = match intensity {
-            "gentle" => EnergyLevel::Exhausted,
-            "moderate" => EnergyLevel::Tired,
-            "vigorous" => EnergyLevel::Normal,
-            "intense" => EnergyLevel::Energetic,
-            "maximum" => EnergyLevel::Hyperactive,
-            _ => EnergyLevel::Normal,
-        };
+        let required_energy = intensity.required_energy_level();
 
         if current_energy < required_energy {
             return Err(LandMoveError::InsufficientEnergyForLandMove {
@@ -136,23 +127,18 @@ pub trait LandMove: Moving + HasEnergy {
             });
         }
 
-        // Calculate energy cost based on intensity
-        let intensity_energy_cost = match intensity {
-            "gentle" => 0,
-            "moderate" => 0, // Don't consume extra, just the base do_move cost
-            "vigorous" => 1,
-            "intense" => 2, // Reduced from 3
-            "maximum" => 3, // Reduced from 4
-            _ => 0,
-        };
-
+        let intensity_energy_cost = intensity.energy_cost();
         if intensity_energy_cost > 0 {
             self.consume_energy_levels(intensity_energy_cost);
         }
 
         // Use basic movement for the motion
         match self.do_move() {
-            Ok(_) => Ok(format!("Entity moves on land at {} intensity", intensity)),
+            Ok(_) => Ok(format!(
+                "Entity moves on land at {} intensity ({})",
+                intensity,
+                intensity.description()
+            )),
             Err(movement_error) => Err(LandMoveError::MovementError(movement_error)),
         }
     }
@@ -241,7 +227,7 @@ mod tests {
             energy: EnergyLevel::Hyperactive, // Start with maximum energy
         };
 
-        let result = mover.land_move_at_intensity("intense");
+        let result = mover.land_move_at_intensity(Intensity::Intense);
         assert!(result.is_ok());
         // intense: 2 energy for intensity + 1 for do_move = 3 total
         // Hyperactive (5) -> 3 consumed = Tired (2)
@@ -271,7 +257,7 @@ mod tests {
             energy: EnergyLevel::Tired, // Not enough for intense movement
         };
 
-        let result = mover.land_move_at_intensity("intense");
+        let result = mover.land_move_at_intensity(Intensity::Intense);
         assert!(result.is_err());
         // Should match the InsufficientEnergyForLandMove error
         if let Err(LandMoveError::InsufficientEnergyForLandMove { required, current }) = result {
@@ -305,5 +291,49 @@ mod tests {
         // Test difficult terrain
         let result = mover.navigate_terrain(Terrain::Mountain);
         assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_various_intensities() {
+        let mut mover = TestLandMover {
+            energy: EnergyLevel::Hyperactive,
+        };
+
+        // Test gentle intensity
+        let result = mover.land_move_at_intensity(Intensity::Gentle);
+        assert!(result.is_ok());
+
+        // Reset energy
+        mover.set_energy(EnergyLevel::Hyperactive);
+
+        // Test vigorous intensity
+        let result = mover.land_move_at_intensity(Intensity::Vigorous);
+        assert!(result.is_ok());
+
+        // Reset energy
+        mover.set_energy(EnergyLevel::Hyperactive);
+
+        // Test maximum intensity
+        let result = mover.land_move_at_intensity(Intensity::Maximum);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_intensity_energy_calculation() {
+        // Test that different intensities consume the expected energy
+        let mut mover = TestLandMover {
+            energy: EnergyLevel::Hyperactive,
+        };
+
+        // Gentle should only consume base movement energy (1)
+        let result = mover.land_move_at_intensity(Intensity::Gentle);
+        assert!(result.is_ok());
+        assert_eq!(mover.energy(), EnergyLevel::Energetic); // 5 -> 4
+
+        // Reset and test vigorous (1 extra + 1 base = 2 total)
+        mover.set_energy(EnergyLevel::Hyperactive);
+        let result = mover.land_move_at_intensity(Intensity::Vigorous);
+        assert!(result.is_ok());
+        assert_eq!(mover.energy(), EnergyLevel::Normal); // 5 -> 3
     }
 }

@@ -1,6 +1,188 @@
 use crate::behaviors::moving::{Moving, MovingError};
-use crate::core::{EnergyLevel, HasEnergy};
+use crate::core::{EnergyLevel, HasEnergy, Terrain};
 use thiserror::Error;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RoadType {
+    Highway,
+    City,
+    Country,
+    Suburban,
+    Mountain,
+    OffRoad,
+    ExtremeOff,
+}
+
+impl RoadType {
+    /// Get the difficulty level of this road type (1-5)
+    pub fn difficulty_level(&self) -> u8 {
+        match self {
+            RoadType::Highway | RoadType::City => 1,
+            RoadType::Country | RoadType::Suburban => 2,
+            RoadType::Mountain | RoadType::OffRoad => 3,
+            RoadType::ExtremeOff => 4,
+        }
+    }
+
+    /// Get the energy cost for driving on this road type
+    pub fn energy_cost(&self) -> u8 {
+        match self {
+            RoadType::Highway | RoadType::City => 1,
+            RoadType::Country | RoadType::Suburban => 1,
+            RoadType::Mountain | RoadType::OffRoad => 2,
+            RoadType::ExtremeOff => 3,
+        }
+    }
+
+    /// Get the minimum energy level required for this road type
+    pub fn required_energy_level(&self) -> EnergyLevel {
+        match self {
+            RoadType::Highway | RoadType::City => EnergyLevel::Tired,
+            RoadType::Country | RoadType::Suburban => EnergyLevel::Normal,
+            RoadType::Mountain | RoadType::OffRoad => EnergyLevel::Energetic,
+            RoadType::ExtremeOff => EnergyLevel::Hyperactive,
+        }
+    }
+
+    /// Get a description of this road type
+    pub fn description(&self) -> &'static str {
+        match self {
+            RoadType::Highway => "high-speed highway with smooth asphalt",
+            RoadType::City => "urban streets with traffic lights and congestion",
+            RoadType::Country => "rural roads with moderate traffic",
+            RoadType::Suburban => "residential area streets",
+            RoadType::Mountain => "winding mountain roads with steep grades",
+            RoadType::OffRoad => "unpaved trails and rough terrain",
+            RoadType::ExtremeOff => "extremely challenging off-road conditions",
+        }
+    }
+
+    /// Check if this road type requires special vehicle capabilities
+    pub fn requires_off_road_capability(&self) -> bool {
+        matches!(self, RoadType::OffRoad | RoadType::ExtremeOff)
+    }
+}
+
+impl std::fmt::Display for RoadType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let name = match self {
+            RoadType::Highway => "Highway",
+            RoadType::City => "City",
+            RoadType::Country => "Country",
+            RoadType::Suburban => "Suburban",
+            RoadType::Mountain => "Mountain",
+            RoadType::OffRoad => "Off-Road",
+            RoadType::ExtremeOff => "Extreme Off-Road",
+        };
+        write!(f, "{}", name)
+    }
+}
+
+impl From<&str> for RoadType {
+    fn from(s: &str) -> Self {
+        match s.to_lowercase().as_str() {
+            "highway" => RoadType::Highway,
+            "city" => RoadType::City,
+            "country" => RoadType::Country,
+            "suburban" => RoadType::Suburban,
+            "mountain" => RoadType::Mountain,
+            "off_road" | "offroad" => RoadType::OffRoad,
+            "extreme_terrain" | "extreme" => RoadType::ExtremeOff,
+            _ => RoadType::Country, // Default fallback
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EmergencyManeuver {
+    EmergencyBrake,
+    EvasiveManeuver,
+    EmergencyLaneChange,
+    CollisionAvoidance,
+    SpinRecovery,
+    SkidControl,
+}
+
+impl EmergencyManeuver {
+    /// Get the difficulty level of this maneuver (1-5)
+    pub fn difficulty_level(&self) -> u8 {
+        match self {
+            EmergencyManeuver::EmergencyBrake => 2,
+            EmergencyManeuver::EmergencyLaneChange => 2,
+            EmergencyManeuver::EvasiveManeuver => 3,
+            EmergencyManeuver::SkidControl => 4,
+            EmergencyManeuver::CollisionAvoidance => 4,
+            EmergencyManeuver::SpinRecovery => 5,
+        }
+    }
+
+    /// Get the energy cost for this maneuver
+    pub fn energy_cost(&self) -> u8 {
+        match self {
+            EmergencyManeuver::EmergencyBrake => 2,
+            EmergencyManeuver::EmergencyLaneChange => 2,
+            EmergencyManeuver::EvasiveManeuver => 3,
+            EmergencyManeuver::SkidControl => 3,
+            EmergencyManeuver::CollisionAvoidance => 4,
+            EmergencyManeuver::SpinRecovery => 4,
+        }
+    }
+
+    /// Get the minimum energy level required for this maneuver
+    pub fn required_energy_level(&self) -> EnergyLevel {
+        match self.difficulty_level() {
+            1..=2 => EnergyLevel::Normal,
+            3..=4 => EnergyLevel::Energetic,
+            5 => EnergyLevel::Hyperactive,
+            _ => EnergyLevel::Normal,
+        }
+    }
+
+    /// Get a description of this maneuver
+    pub fn description(&self) -> &'static str {
+        match self {
+            EmergencyManeuver::EmergencyBrake => "sudden hard braking to avoid collision",
+            EmergencyManeuver::EmergencyLaneChange => "quick lane change to avoid obstacle",
+            EmergencyManeuver::EvasiveManeuver => "complex steering to avoid multiple hazards",
+            EmergencyManeuver::CollisionAvoidance => "last-second maneuver to prevent crash",
+            EmergencyManeuver::SpinRecovery => "recovering from vehicle spin or slide",
+            EmergencyManeuver::SkidControl => "regaining control during skid conditions",
+        }
+    }
+
+    /// Check if this is a high-risk maneuver
+    pub fn is_high_risk(&self) -> bool {
+        self.difficulty_level() >= 4
+    }
+}
+
+impl std::fmt::Display for EmergencyManeuver {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let name = match self {
+            EmergencyManeuver::EmergencyBrake => "Emergency Brake",
+            EmergencyManeuver::EvasiveManeuver => "Evasive Maneuver",
+            EmergencyManeuver::EmergencyLaneChange => "Emergency Lane Change",
+            EmergencyManeuver::CollisionAvoidance => "Collision Avoidance",
+            EmergencyManeuver::SpinRecovery => "Spin Recovery",
+            EmergencyManeuver::SkidControl => "Skid Control",
+        };
+        write!(f, "{}", name)
+    }
+}
+
+impl From<&str> for EmergencyManeuver {
+    fn from(s: &str) -> Self {
+        match s.to_lowercase().as_str() {
+            "emergency_brake" | "brake" => EmergencyManeuver::EmergencyBrake,
+            "evasive_maneuver" | "evasive" => EmergencyManeuver::EvasiveManeuver,
+            "emergency_lane_change" | "lane_change" => EmergencyManeuver::EmergencyLaneChange,
+            "collision_avoidance" | "avoid_collision" => EmergencyManeuver::CollisionAvoidance,
+            "spin_recovery" | "spin" => EmergencyManeuver::SpinRecovery,
+            "skid_control" | "skid" => EmergencyManeuver::SkidControl,
+            _ => EmergencyManeuver::EmergencyBrake, // Default fallback
+        }
+    }
+}
 
 #[derive(Error, Debug)]
 pub enum DrivingError {
@@ -19,11 +201,23 @@ pub enum DrivingError {
         max_speed: u32,
     },
 
-    #[error("Road conditions too challenging: {conditions}")]
-    ChallengingRoadConditions { conditions: String },
+    #[error("Road conditions too challenging: {road_type} - {description}")]
+    ChallengingRoadConditions {
+        road_type: RoadType,
+        description: String,
+    },
+
+    #[error("Emergency maneuver failed: {maneuver} - {reason}")]
+    EmergencyManeuverFailed {
+        maneuver: EmergencyManeuver,
+        reason: String,
+    },
 
     #[error("Mechanical failure: {reason}")]
     MechanicalFailure { reason: String },
+
+    #[error("Vehicle not capable of {terrain} terrain")]
+    TerrainNotSupported { terrain: Terrain },
 }
 
 pub type DrivingResult = Result<String, DrivingError>;
@@ -36,6 +230,11 @@ pub trait Driving: Moving + HasEnergy {
     /// Fuel efficiency in km per energy level
     fn fuel_efficiency(&self) -> u32 {
         50 // Default: 50 km per energy level
+    }
+
+    /// Check if vehicle can handle off-road conditions
+    fn has_off_road_capability(&self) -> bool {
+        false // Default: no off-road capability
     }
 
     /// Basic driving
@@ -115,42 +314,63 @@ pub trait Driving: Moving + HasEnergy {
         }
     }
 
-    /// Driving on different road conditions
-    fn drive_on_road(&mut self, road_type: &str) -> DrivingResult {
+    /// Driving on different road types - now uses RoadType enum
+    fn drive_on_road(&mut self, road_type: RoadType) -> DrivingResult {
         let current_energy = self.energy();
+        let required_energy = road_type.required_energy_level();
 
-        // Different road conditions require different energy levels
-        let required_energy = match road_type {
-            "highway" | "city" => EnergyLevel::Tired,
-            "country" | "suburban" => EnergyLevel::Normal,
-            "mountain" | "off_road" => EnergyLevel::Energetic,
-            "extreme_terrain" => EnergyLevel::Hyperactive,
-            _ => EnergyLevel::Normal,
-        };
+        // Check if vehicle can handle off-road conditions
+        if road_type.requires_off_road_capability() && !self.has_off_road_capability() {
+            return Err(DrivingError::ChallengingRoadConditions {
+                road_type,
+                description: "Vehicle lacks off-road capability".to_string(),
+            });
+        }
 
         if current_energy < required_energy {
             return Err(DrivingError::ChallengingRoadConditions {
-                conditions: format!(
-                    "Road type '{}' too challenging for current energy: {}",
-                    road_type, current_energy
+                road_type,
+                description: format!(
+                    "Insufficient energy for {} roads: need {}, have {}",
+                    road_type, required_energy, current_energy
                 ),
             });
         }
 
-        // Challenging roads consume extra energy
-        let road_energy_cost = match road_type {
-            "mountain" | "off_road" => 2,
-            "extreme_terrain" => 3,
-            _ => 1,
-        };
-
+        let road_energy_cost = road_type.energy_cost();
         self.consume_energy_levels(road_energy_cost);
 
         // Use basic driving as foundation
         match self.drive() {
-            Ok(_) => Ok(format!("Entity drives on {} roads", road_type)),
+            Ok(_) => Ok(format!(
+                "Entity drives on {} roads ({})",
+                road_type,
+                road_type.description()
+            )),
             Err(driving_error) => Err(driving_error),
         }
+    }
+
+    /// Drive on terrain (converts Terrain to appropriate driving context)
+    fn drive_on_terrain(&mut self, terrain: Terrain) -> DrivingResult {
+        // Check if terrain is suitable for vehicles
+        if !terrain.vehicle_accessible() {
+            return Err(DrivingError::TerrainNotSupported { terrain });
+        }
+
+        // Convert terrain to road type for driving context
+        let road_type = match terrain {
+            Terrain::Road | Terrain::Pavement | Terrain::Sidewalk => RoadType::Highway,
+            Terrain::Grass | Terrain::Dirt => RoadType::Country,
+            Terrain::Gravel => RoadType::OffRoad,
+            Terrain::Sand | Terrain::Rocky => RoadType::OffRoad,
+            Terrain::Snow => RoadType::Mountain,
+            _ => {
+                return Err(DrivingError::TerrainNotSupported { terrain });
+            }
+        };
+
+        self.drive_on_road(road_type)
     }
 
     /// Long distance driving with fuel efficiency considerations
@@ -180,12 +400,11 @@ pub trait Driving: Moving + HasEnergy {
         }
     }
 
-    /// Emergency maneuver - high energy cost but potentially life-saving
-    fn emergency_maneuver(&mut self, maneuver_type: &str) -> DrivingResult {
+    /// Emergency maneuver - now uses EmergencyManeuver enum
+    fn emergency_maneuver(&mut self, maneuver: EmergencyManeuver) -> DrivingResult {
         let current_energy = self.energy();
+        let required_energy = maneuver.required_energy_level();
 
-        // Emergency maneuvers require significant energy
-        let required_energy = EnergyLevel::Normal;
         if current_energy < required_energy {
             return Err(DrivingError::InsufficientEnergyForDriving {
                 required: required_energy,
@@ -193,23 +412,26 @@ pub trait Driving: Moving + HasEnergy {
             });
         }
 
-        // High energy cost for emergency maneuvers
-        let maneuver_cost = match maneuver_type {
-            "emergency_brake" => 2,
-            "evasive_maneuver" => 3,
-            "emergency_lane_change" => 2,
-            "collision_avoidance" => 4,
-            _ => 2,
-        };
-
+        let maneuver_cost = maneuver.energy_cost();
         self.consume_energy_levels(maneuver_cost);
 
-        // Check if maneuver was successful based on remaining energy
-        if self.energy() >= EnergyLevel::Exhausted {
-            Ok(format!("Entity successfully performed {}", maneuver_type))
+        // Check if maneuver was successful based on remaining energy and risk
+        let success = if maneuver.is_high_risk() {
+            self.energy() >= EnergyLevel::Tired // High-risk maneuvers need more remaining energy
         } else {
-            Err(DrivingError::MechanicalFailure {
-                reason: format!("Vehicle exhausted during {}", maneuver_type),
+            self.energy() >= EnergyLevel::Exhausted
+        };
+
+        if success {
+            Ok(format!(
+                "Entity successfully performed {} ({})",
+                maneuver,
+                maneuver.description()
+            ))
+        } else {
+            Err(DrivingError::EmergencyManeuverFailed {
+                maneuver,
+                reason: "Vehicle exhausted during maneuver".to_string(),
             })
         }
     }
@@ -224,6 +446,7 @@ mod tests {
     struct TestVehicle {
         energy: EnergyLevel,
         max_speed: u32,
+        off_road: bool,
     }
 
     impl HasEnergy for TestVehicle {
@@ -241,6 +464,10 @@ mod tests {
         fn max_speed(&self) -> u32 {
             self.max_speed
         }
+
+        fn has_off_road_capability(&self) -> bool {
+            self.off_road
+        }
     }
 
     #[test]
@@ -248,6 +475,7 @@ mod tests {
         let mut vehicle = TestVehicle {
             energy: EnergyLevel::Normal,
             max_speed: 120,
+            off_road: false,
         };
 
         let result = vehicle.drive();
@@ -260,6 +488,7 @@ mod tests {
         let mut vehicle = TestVehicle {
             energy: EnergyLevel::Hyperactive,
             max_speed: 200,
+            off_road: false,
         };
 
         let result = vehicle.drive_at_speed(180);
@@ -271,9 +500,63 @@ mod tests {
         let mut vehicle = TestVehicle {
             energy: EnergyLevel::Hyperactive,
             max_speed: 120,
+            off_road: false,
         };
 
         let result = vehicle.drive_at_speed(150);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_road_type_driving() {
+        let mut vehicle = TestVehicle {
+            energy: EnergyLevel::Energetic,
+            max_speed: 120,
+            off_road: false,
+        };
+
+        // Should work on highway
+        let result = vehicle.drive_on_road(RoadType::Highway);
+        assert!(result.is_ok());
+
+        // Reset energy
+        vehicle.set_energy(EnergyLevel::Energetic);
+
+        // Should fail on off-road without capability
+        let result = vehicle.drive_on_road(RoadType::OffRoad);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_off_road_capability() {
+        let mut off_road_vehicle = TestVehicle {
+            energy: EnergyLevel::Energetic,
+            max_speed: 100,
+            off_road: true,
+        };
+
+        // Should work with off-road capability
+        let result = off_road_vehicle.drive_on_road(RoadType::OffRoad);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_terrain_driving() {
+        let mut vehicle = TestVehicle {
+            energy: EnergyLevel::Normal,
+            max_speed: 120,
+            off_road: false,
+        };
+
+        // Should work on road terrain
+        let result = vehicle.drive_on_terrain(Terrain::Road);
+        assert!(result.is_ok());
+
+        // Reset energy
+        vehicle.set_energy(EnergyLevel::Normal);
+
+        // Should fail on non-vehicle terrain
+        let result = vehicle.drive_on_terrain(Terrain::Forest);
         assert!(result.is_err());
     }
 }

@@ -4,7 +4,7 @@
 //! can simplify competition design by abstracting over similar behaviors.
 
 use crate::behaviors::{flying::Flying, land_move::LandMove, swimming::Swimming};
-use crate::core::{EnergyLevel, HasEnergy};
+use crate::core::{EnergyLevel, HasEnergy, Intensity, Terrain};
 use std::fmt;
 
 #[derive(Debug, Clone)]
@@ -233,10 +233,10 @@ where
     S: Swimming + HasEnergy,
     F: Flying + HasEnergy,
 {
-    /// Extended race that tests all 4 LandMove functions
+    /// Extended race that tests all 4 LandMove functions with type-safe enums
     pub fn extended_race(&mut self) -> UnifiedRaceResult {
         println!("🌐 Team {} starts the EXTENDED unified race!", self.name);
-        println!("   Testing all LandMove capabilities!");
+        println!("   Testing all LandMove capabilities with type-safe enums!");
 
         let mut completed_legs = 0;
         let mut abstraction_bonus = 200; // Higher bonus for extended race
@@ -273,10 +273,10 @@ where
             Err("Insufficient energy".to_string())
         };
 
-        // Test 3: Terrain navigation (if enough energy)
-        print!("    Test 3 - Terrain: ");
-        let test3_result = if self.land_mover.energy() >= EnergyLevel::Tired {
-            let result = self.land_mover.navigate_terrain("rocky".into());
+        // Test 3: Terrain navigation with enum (if enough energy)
+        print!("    Test 3 - Terrain ({}): ", Terrain::Rocky);
+        let test3_result = if self.land_mover.energy() >= Terrain::Rocky.required_energy_level() {
+            let result = self.land_mover.navigate_terrain(Terrain::Rocky);
             let success = result.is_ok();
             if success {
                 println!("✅ {}", result.as_ref().unwrap());
@@ -285,25 +285,32 @@ where
             }
             result.map_err(|e| e.to_string())
         } else {
-            println!("⏭️  Skipped (insufficient energy)");
+            println!(
+                "⏭️  Skipped (insufficient energy for {} terrain)",
+                Terrain::Rocky
+            );
             Err("Insufficient energy".to_string())
         };
 
-        // Test 4: Intensity movement (if enough energy)
-        print!("    Test 4 - Intensity: ");
-        let test4_result = if self.land_mover.energy() >= EnergyLevel::Normal {
-            let result = self.land_mover.land_move_at_intensity("vigorous");
-            let success = result.is_ok();
-            if success {
-                println!("✅ {}", result.as_ref().unwrap());
+        // Test 4: Intensity movement with enum (if enough energy)
+        print!("    Test 4 - Intensity ({}): ", Intensity::Vigorous);
+        let test4_result =
+            if self.land_mover.energy() >= Intensity::Vigorous.required_energy_level() {
+                let result = self.land_mover.land_move_at_intensity(Intensity::Vigorous);
+                let success = result.is_ok();
+                if success {
+                    println!("✅ {}", result.as_ref().unwrap());
+                } else {
+                    println!("❌ {}", result.as_ref().unwrap_err());
+                }
+                result.map_err(|e| e.to_string())
             } else {
-                println!("❌ {}", result.as_ref().unwrap_err());
-            }
-            result.map_err(|e| e.to_string())
-        } else {
-            println!("⏭️  Skipped (insufficient energy)");
-            Err("Insufficient energy".to_string())
-        };
+                println!(
+                    "⏭️  Skipped (insufficient energy for {} intensity)",
+                    Intensity::Vigorous
+                );
+                Err("Insufficient energy".to_string())
+            };
 
         // Calculate land leg success - now all results have the same type
         let tests_passed = [&test1_result, &test2_result, &test3_result, &test4_result]
@@ -314,15 +321,19 @@ where
         let land_result = if tests_passed > 0 {
             completed_legs += 1;
             abstraction_bonus += tests_passed as u32 * 50; // Bonus for each test passed
-            Ok(format!("Completed {}/4 land movement tests", tests_passed))
+            abstraction_bonus += 50; // Extra bonus for using type-safe enums
+            Ok(format!(
+                "Completed {}/4 land movement tests with type-safe enums",
+                tests_passed
+            ))
         } else {
             Err("Failed all land movement tests".to_string())
         };
 
         let land_leg = UnifiedLeg {
             participant_name: self.get_land_mover_name(),
-            participant_category: format!("Land Mover ({}/4 tests)", tests_passed),
-            activity: "Extended Land Movement".to_string(),
+            participant_category: format!("Land Mover ({}/4 tests, type-safe)", tests_passed),
+            activity: "Extended Land Movement (Enums)".to_string(),
             starting_energy: land_start_energy,
             result: land_result,
             final_energy: self.land_mover.energy(),
@@ -334,6 +345,139 @@ where
 
         println!(
             "  🏁 Team {} completed {}/3 legs in extended race",
+            self.name, completed_legs
+        );
+
+        UnifiedRaceResult {
+            team_name: self.name.clone(),
+            land_leg,
+            water_leg,
+            air_leg,
+            completed_legs,
+            abstraction_bonus,
+        }
+    }
+
+    /// Comprehensive race that tests multiple terrains and intensities
+    pub fn comprehensive_race(&mut self) -> UnifiedRaceResult {
+        println!(
+            "🌐 Team {} starts the COMPREHENSIVE unified race!",
+            self.name
+        );
+        println!("   Testing multiple terrains and intensities!");
+
+        let mut completed_legs = 0;
+        let mut abstraction_bonus = 300; // Highest bonus for comprehensive race
+
+        // Comprehensive Land Movement Test
+        println!("  🚶🚗 Comprehensive Land Movement Challenge...");
+        let land_start_energy = self.land_mover.energy();
+
+        let test_terrains = vec![
+            Terrain::Road,     // Easy
+            Terrain::Grass,    // Easy
+            Terrain::Rocky,    // Moderate
+            Terrain::Mountain, // Difficult
+        ];
+
+        let test_intensities = vec![
+            Intensity::Gentle,   // Low energy
+            Intensity::Moderate, // Low energy
+            Intensity::Vigorous, // Medium energy
+            Intensity::Intense,  // High energy
+        ];
+
+        let mut terrain_tests_passed = 0;
+        let mut intensity_tests_passed = 0;
+
+        // Test various terrains
+        println!("    🏔️  Terrain Tests:");
+        for terrain in &test_terrains {
+            print!(
+                "      {} (difficulty {}): ",
+                terrain,
+                terrain.difficulty_level()
+            );
+            if self.land_mover.energy() >= terrain.required_energy_level() {
+                match self.land_mover.navigate_terrain(*terrain) {
+                    Ok(result) => {
+                        println!("✅ {}", result);
+                        terrain_tests_passed += 1;
+                    }
+                    Err(e) => {
+                        println!("❌ {}", e);
+                    }
+                }
+            } else {
+                println!(
+                    "⏭️  Skipped (need {} energy)",
+                    terrain.required_energy_level()
+                );
+            }
+        }
+
+        // Reset energy for intensity tests
+        self.land_mover.set_energy(land_start_energy);
+
+        // Test various intensities
+        println!("    💪 Intensity Tests:");
+        for intensity in &test_intensities {
+            print!(
+                "      {} (level {}): ",
+                intensity,
+                intensity.difficulty_level()
+            );
+            if self.land_mover.energy() >= intensity.required_energy_level() {
+                match self.land_mover.land_move_at_intensity(*intensity) {
+                    Ok(result) => {
+                        println!("✅ {}", result);
+                        intensity_tests_passed += 1;
+                    }
+                    Err(e) => {
+                        println!("❌ {}", e);
+                    }
+                }
+            } else {
+                println!(
+                    "⏭️  Skipped (need {} energy)",
+                    intensity.required_energy_level()
+                );
+            }
+        }
+
+        let total_tests_passed = terrain_tests_passed + intensity_tests_passed;
+        let total_tests = test_terrains.len() + test_intensities.len();
+
+        let land_result = if total_tests_passed > 0 {
+            completed_legs += 1;
+            abstraction_bonus += total_tests_passed as u32 * 25; // Bonus for each test passed
+            abstraction_bonus += 100; // Extra bonus for comprehensive testing
+            Ok(format!(
+                "Comprehensive test: {}/{} total ({} terrain, {} intensity)",
+                total_tests_passed, total_tests, terrain_tests_passed, intensity_tests_passed
+            ))
+        } else {
+            Err("Failed all comprehensive tests".to_string())
+        };
+
+        let land_leg = UnifiedLeg {
+            participant_name: self.get_land_mover_name(),
+            participant_category: format!(
+                "Land Mover (comprehensive: {}/{})",
+                total_tests_passed, total_tests
+            ),
+            activity: "Comprehensive Land Movement".to_string(),
+            starting_energy: land_start_energy,
+            result: land_result,
+            final_energy: self.land_mover.energy(),
+            capability_score: total_tests_passed as u32 * 15,
+        };
+
+        // Regular swimming and flying legs
+        let (water_leg, air_leg) = self.run_water_and_air_legs(&mut completed_legs);
+
+        println!(
+            "  🏁 Team {} completed {}/3 legs in comprehensive race",
             self.name, completed_legs
         );
 
@@ -446,6 +590,7 @@ impl UnifiedRaceCompetition {
         println!("  ✅ Unified interface for all land-based movement");
         println!("  ✅ Consistent energy management across movement types");
         println!("  ✅ Four distinct movement capabilities tested");
+        println!("  ✅ Type-safe Terrain and Intensity enums");
 
         println!("\n📊 PERFORMANCE METRICS:");
         for result in &self.results {
@@ -462,6 +607,44 @@ impl UnifiedRaceCompetition {
         println!("  4. 🚀 Code Reuse: Shared implementations across types");
         println!("  5. 🛡️  Type Safety: Compile-time guarantees maintained");
         println!("  6. 🎯 Comprehensive Testing: All four movement types evaluated");
+        println!("  7. 🏗️  Enum Safety: Type-safe terrain and intensity parameters");
+        println!("  8. 📝 Rich Metadata: Difficulty levels, energy costs, descriptions");
+    }
+
+    pub fn analyze_enum_benefits(&self) {
+        println!("\n🏗️  ENUM TYPE SAFETY ANALYSIS:");
+        println!("===============================");
+
+        println!("\n🏔️  TERRAIN ENUM BENEFITS:");
+        println!("  ✅ No more invalid terrain strings like 'rokcy' or 'mountian'");
+        println!("  ✅ Compile-time validation of terrain parameters");
+        println!("  ✅ Rich metadata: difficulty levels, energy costs, descriptions");
+        println!("  ✅ Helper methods: by_difficulty(), vehicle_accessible(), walkable()");
+        println!("  ✅ Consistent Display formatting");
+
+        println!("\n💪 INTENSITY ENUM BENEFITS:");
+        println!("  ✅ No more ambiguous intensity strings like 'kinda fast' or 'really hard'");
+        println!("  ✅ Clear difficulty levels from 1 (Gentle) to 5 (Maximum)");
+        println!("  ✅ Speed multipliers for performance calculations");
+        println!("  ✅ Sustainability indicators for long-term movement");
+        println!("  ✅ Energy requirements clearly defined");
+
+        println!("\n🔄 BACKWARDS COMPATIBILITY:");
+        println!("  ✅ From<&str> implementations allow gradual migration");
+        println!("  ✅ String-based code still works via automatic conversion");
+        println!("  ✅ Fallback values for unknown strings");
+
+        println!("\n🚀 FUTURE EXTENSIBILITY:");
+        println!("  ✅ Easy to add new terrain types (e.g., Terrain::Underwater)");
+        println!("  ✅ Easy to add new intensity levels (e.g., Intensity::Relaxed)");
+        println!("  ✅ Rich metadata can be extended without breaking changes");
+        println!("  ✅ Compiler helps catch all usage sites when adding variants");
+
+        println!("\n📈 PERFORMANCE IMPROVEMENTS:");
+        println!("  ✅ Enum matching is faster than string comparison");
+        println!("  ✅ No heap allocations for terrain/intensity parameters");
+        println!("  ✅ Copy semantics instead of expensive string cloning");
+        println!("  ✅ Better cache locality with enum variants");
     }
 }
 
