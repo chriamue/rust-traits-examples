@@ -13,8 +13,3 @@ pub use eagle::Eagle;
 pub use penguin::Penguin;
 pub use snake::Snake;
 pub use whale::Whale;
-
-/// Demonstrate polymorphism with trait objects
-pub fn describe_animal(animal: &dyn Animal) -> String {
-    animal.description()
-}

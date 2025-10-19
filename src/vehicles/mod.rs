@@ -13,8 +13,3 @@ pub use helicopter::Helicopter;
 pub use motorcycle::Motorcycle;
 pub use ship::Ship;
 pub use vehicle::Vehicle;
-
-/// Demonstrate polymorphism with trait objects
-pub fn describe_vehicle(vehicle: &dyn Vehicle) -> String {
-    vehicle.description()
-}
