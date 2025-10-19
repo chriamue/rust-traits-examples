@@ -29,7 +29,10 @@ fn main() {
     println!("🔵 TEAM 1: 'The Specialists'");
     println!("  Strategy: Use the best animal for each discipline");
 
-    let whale = Whale::new("Deep Dive Danny".to_string());
+    let whale = Whale::new(
+        "Deep Dive Danny".to_string(),
+        whale::WhaleSpecies::BlueWhale,
+    );
     let greyhound = Dog::new("Lightning Bolt".to_string(), dog::DogBreed::Greyhound);
     let eagle = Eagle::new("Sky Dominator".to_string());
 

@@ -79,7 +79,7 @@ fn run_unified_competitions() {
     let mut dog = Dog::new("Land Runner".to_string(), dog::DogBreed::BorderCollie);
     dog.set_energy(EnergyLevel::Energetic);
 
-    let mut whale = Whale::new("Ocean Cruiser".to_string());
+    let mut whale = Whale::new("Ocean Cruiser".to_string(), whale::WhaleSpecies::BlueWhale);
     whale.set_energy(EnergyLevel::Normal);
 
     let mut fighter_jet = Airplane::new(
@@ -261,7 +261,7 @@ fn run_unified_competitions() {
     let mut dog2 = Dog::new("Endurance Runner".to_string(), dog::DogBreed::Husky);
     dog2.set_energy(EnergyLevel::Hyperactive);
 
-    let mut whale2 = Whale::new("Deep Diver".to_string());
+    let mut whale2 = Whale::new("Deep Diver".to_string(), whale::WhaleSpecies::BlueWhale);
     whale2.set_energy(EnergyLevel::Energetic);
 
     let mut jet2 = Airplane::new(
