@@ -76,7 +76,7 @@ fn run_unified_competitions() {
     println!("🌿 TEAM 1: 'Nature Meets Technology'");
     println!("  Strategy: Walking animal + Swimming animal + Flying vehicle");
 
-    let mut dog = Dog::new("Land Runner".to_string(), "Border Collie".to_string());
+    let mut dog = Dog::new("Land Runner".to_string(), dog::DogBreed::BorderCollie);
     dog.set_energy(EnergyLevel::Energetic);
 
     let mut whale = Whale::new("Ocean Cruiser".to_string());
@@ -258,7 +258,7 @@ fn run_unified_competitions() {
     println!("==================================================");
 
     // Reset teams for extended race
-    let mut dog2 = Dog::new("Endurance Runner".to_string(), "Husky".to_string());
+    let mut dog2 = Dog::new("Endurance Runner".to_string(), dog::DogBreed::Husky);
     dog2.set_energy(EnergyLevel::Hyperactive);
 
     let mut whale2 = Whale::new("Deep Diver".to_string());

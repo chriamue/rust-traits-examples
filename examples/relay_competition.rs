@@ -30,7 +30,7 @@ fn main() {
     println!("  Strategy: Use the best animal for each discipline");
 
     let whale = Whale::new("Deep Dive Danny".to_string());
-    let greyhound = Dog::new("Lightning Bolt".to_string(), "Greyhound".to_string());
+    let greyhound = Dog::new("Lightning Bolt".to_string(), dog::DogBreed::Greyhound);
     let eagle = Eagle::new("Sky Dominator".to_string());
 
     println!(
@@ -59,7 +59,7 @@ fn main() {
     println!("  Strategy: Aquatic expertise with diverse support");
 
     let penguin = Penguin::new("Torpedo Tux".to_string());
-    let collie = Dog::new("Steady Stride".to_string(), "Border Collie".to_string());
+    let collie = Dog::new("Steady Stride".to_string(), dog::DogBreed::BorderCollie);
     let falcon = Eagle::new("Wind Cutter".to_string());
 
     println!(
@@ -125,8 +125,8 @@ fn main() {
     println!("\n🟣 TEAM 4: 'The Underdogs'");
     println!("  Strategy: Prove that teamwork beats individual excellence");
 
-    let labrador = Dog::new("Paddle Paws".to_string(), "Labrador".to_string());
-    let mut rescue_dog = Dog::new("Mountain Rescue".to_string(), "Saint Bernard".to_string());
+    let labrador = Dog::new("Paddle Paws".to_string(), dog::DogBreed::Labrador);
+    let mut rescue_dog = Dog::new("Mountain Rescue".to_string(), dog::DogBreed::SaintBernard);
     rescue_dog.set_energy(EnergyLevel::Tired); // Handicap for challenge
 
     let mut young_eagle = Eagle::new("Rookie Flyer".to_string());

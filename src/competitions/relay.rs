@@ -311,7 +311,10 @@ mod tests {
     #[test]
     fn test_relay_team() {
         let duck = Duck::new("Swimming Duck".to_string());
-        let dog = Dog::new("Running Dog".to_string(), "Greyhound".to_string());
+        let dog = Dog::new(
+            "Running Dog".to_string(),
+            crate::animals::dog::DogBreed::Greyhound,
+        );
         let eagle = Eagle::new("Flying Eagle".to_string());
 
         let mut team = RelayTeam::new("Mixed Team".to_string(), duck, dog, eagle);
