@@ -1,9 +1,14 @@
 # rust-traits-examples
 
 [![Tests](https://github.com/chriamue/rust-traits-examples/actions/workflows/test.yml/badge.svg)](https://github.com/chriamue/rust-traits-examples/actions/workflows/test.yml)
-[![Coverage](https://raw.githubusercontent.com/chriamue/rust-traits-examples/main/.github/badges/coverage.svg)](https://github.com/chriamue/rust-traits-examples/actions)
+[![BDD Tests](https://github.com/chriamue/rust-traits-examples/actions/workflows/bdd-tests.yml/badge.svg)](https://github.com/chriamue/rust-traits-examples/actions/workflows/bdd-tests.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A comprehensive demonstration of **abstract development using Rust traits**, showcasing how trait composition enables flexible, type-safe, and extensible system design.
+
+> **📊 Test Coverage**: View detailed coverage reports in the [Actions tab](https://github.com/chriamue/rust-traits-examples/actions) → Latest run → Artifacts → `coverage-report`
+>
+> **🧪 BDD Specifications**: See living documentation through [Cucumber test reports](https://github.com/chriamue/rust-traits-examples/actions) in the BDD Tests workflow
 
 ## 🎯 Project Purpose
 
