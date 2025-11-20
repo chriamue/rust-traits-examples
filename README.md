@@ -1,5 +1,8 @@
 # rust-traits-examples
 
+[![Tests](https://github.com/chriamue/rust-traits-examples/actions/workflows/test.yml/badge.svg)](https://github.com/chriamue/rust-traits-examples/actions/workflows/test.yml)
+[![Coverage](https://raw.githubusercontent.com/chriamue/rust-traits-examples/main/.github/badges/coverage.svg)](https://github.com/chriamue/rust-traits-examples/actions)
+
 A comprehensive demonstration of **abstract development using Rust traits**, showcasing how trait composition enables flexible, type-safe, and extensible system design.
 
 ## 🎯 Project Purpose
