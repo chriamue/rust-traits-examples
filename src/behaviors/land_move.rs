@@ -1,7 +1,7 @@
 //! Land Movement Trait
 //!
-//! This module defines the LandMove trait which serves as an abstraction
-//! over both walking and driving capabilities.
+//! This module defines the LandMove trait which serves as the base
+//! for both walking and driving capabilities.
 
 use crate::behaviors::moving::{Moving, MovingError};
 use crate::core::{EnergyLevel, HasEnergy};
@@ -22,7 +22,7 @@ pub enum LandMoveError {
 pub type LandMoveResult = Result<String, LandMoveError>;
 
 /// Trait for anything that can move on land
-/// This includes both biological movement (walking) and mechanical movement (driving)
+/// This is the base trait for both biological movement (walking) and mechanical movement (driving)
 pub trait LandMove: Moving + HasEnergy {
     /// Basic land movement
     fn land_move(&mut self) -> LandMoveResult {
@@ -68,20 +68,6 @@ pub trait LandMove: Moving + HasEnergy {
         }
     }
 }
-
-use crate::animals::{Dog, Duck, Eagle, Penguin};
-use crate::vehicles::{Airplane, Car, Motorcycle};
-
-// LandMove implementations for animals (via walking)
-impl LandMove for Dog {}
-impl LandMove for Duck {}
-impl LandMove for Eagle {}
-impl LandMove for Penguin {}
-
-// LandMove implementations for vehicles (via driving)
-impl LandMove for Car {}
-impl LandMove for Motorcycle {}
-impl LandMove for Airplane {}
 
 #[cfg(test)]
 mod tests {
@@ -182,7 +168,7 @@ mod tests {
         let mut mover = TestLandMover::new(EnergyLevel::Exhausted);
 
         let result = mover.land_move();
-        // This will fail because do_move() consumes energy first
+        // This will succeed because Exhausted meets the minimum requirement
         assert!(result.is_ok());
     }
 
@@ -193,7 +179,7 @@ mod tests {
         let result = mover.land_move();
         assert!(result.is_ok());
 
-        // Should be at Collapsed after movement
+        // Should be at Exhausted after movement
         assert_eq!(mover.energy(), EnergyLevel::Exhausted);
     }
 }

@@ -1,4 +1,5 @@
 use crate::animals::Animal;
+use crate::behaviors::LandMove;
 use crate::behaviors::{flying::Flying, moving::Moving, walking::Walking};
 use crate::core::{EnergyLevel, HasEnergy};
 
@@ -38,8 +39,8 @@ impl HasEnergy for Eagle {
 }
 
 impl Moving for Eagle {}
+impl LandMove for Eagle {}
 impl Walking for Eagle {}
-
 impl Flying for Eagle {
     fn max_altitude(&self) -> u32 {
         3000 // Eagles can fly very high

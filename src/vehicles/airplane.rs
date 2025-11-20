@@ -1,4 +1,4 @@
-use crate::behaviors::{driving::Driving, flying::Flying, moving::Moving};
+use crate::behaviors::{driving::Driving, flying::Flying, land_move::LandMove, moving::Moving};
 use crate::core::{EnergyLevel, HasEnergy};
 use crate::vehicles::Vehicle;
 
@@ -139,6 +139,7 @@ impl HasEnergy for Airplane {
 }
 
 impl Moving for Airplane {}
+impl LandMove for Airplane {}
 
 impl Flying for Airplane {
     fn max_altitude(&self) -> u32 {

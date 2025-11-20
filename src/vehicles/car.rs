@@ -1,4 +1,4 @@
-use crate::behaviors::{driving::Driving, moving::Moving};
+use crate::behaviors::{driving::Driving, land_move::LandMove, moving::Moving};
 use crate::core::{EnergyLevel, HasEnergy};
 use crate::vehicles::Vehicle;
 
@@ -127,6 +127,7 @@ impl HasEnergy for Car {
 }
 
 impl Moving for Car {}
+impl LandMove for Car {}
 
 impl Driving for Car {
     fn max_speed(&self) -> u32 {

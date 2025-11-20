@@ -33,12 +33,12 @@ package "Vehicles" {
 }
 
 ' Core dependencies
-Walking --|> Moving
 Swimming --|> Moving
 Flying --|> Moving
-Driving --|> Moving
 LandMove --|> Moving
 Moving --|> HasEnergy
+Walking --|> LandMove
+Driving --|> LandMove
 
 ' Animal trait implementations
 Duck ..|> Walking

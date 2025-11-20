@@ -1,4 +1,4 @@
-use crate::behaviors::{driving::Driving, moving::Moving, swimming::Swimming};
+use crate::behaviors::{driving::Driving, land_move::LandMove, moving::Moving, swimming::Swimming};
 use crate::core::{EnergyLevel, HasEnergy};
 use crate::vehicles::Vehicle;
 
@@ -155,6 +155,7 @@ impl HasEnergy for AmphibiousVehicle {
 }
 
 impl Moving for AmphibiousVehicle {}
+impl LandMove for AmphibiousVehicle {}
 
 impl Driving for AmphibiousVehicle {
     fn max_speed(&self) -> u32 {

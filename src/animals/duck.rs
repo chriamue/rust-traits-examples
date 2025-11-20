@@ -1,4 +1,5 @@
 use crate::animals::Animal;
+use crate::behaviors::LandMove;
 use crate::behaviors::{flying::Flying, moving::Moving, swimming::Swimming, walking::Walking};
 use crate::core::{EnergyLevel, HasEnergy};
 
@@ -37,7 +38,10 @@ impl HasEnergy for Duck {
     }
 }
 
+// use land move trait in walk
+
 impl Moving for Duck {}
+impl LandMove for Duck {}
 impl Walking for Duck {}
 impl Swimming for Duck {
     fn max_depth(&self) -> u32 {

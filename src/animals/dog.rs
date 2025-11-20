@@ -1,5 +1,6 @@
 use crate::animals::Animal;
-use crate::behaviors::{moving::Moving, swimming::Swimming, walking::Walking};
+use crate::behaviors::{LandMove, Walking};
+use crate::behaviors::{moving::Moving, swimming::Swimming};
 use crate::core::{EnergyLevel, HasEnergy};
 
 #[derive(Debug, Clone, Copy)]
@@ -66,6 +67,7 @@ impl HasEnergy for Dog {
 }
 
 impl Moving for Dog {}
+impl LandMove for Dog {}
 impl Walking for Dog {}
 
 impl Swimming for Dog {

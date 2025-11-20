@@ -1,4 +1,5 @@
 use crate::animals::Animal;
+use crate::behaviors::LandMove;
 use crate::behaviors::{moving::Moving, swimming::Swimming, walking::Walking};
 use crate::core::{EnergyLevel, HasEnergy};
 
@@ -38,6 +39,7 @@ impl HasEnergy for Penguin {
 }
 
 impl Moving for Penguin {}
+impl LandMove for Penguin {}
 impl Walking for Penguin {}
 
 impl Swimming for Penguin {

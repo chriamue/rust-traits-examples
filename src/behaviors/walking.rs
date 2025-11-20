@@ -1,73 +1,26 @@
-use crate::behaviors::moving::{Moving, MovingError};
-use crate::core::{EnergyLevel, HasEnergy};
-use thiserror::Error;
+use crate::behaviors::land_move::{LandMove, LandMoveResult};
 
-#[derive(Error, Debug)]
-pub enum WalkingError {
-    #[error("Cannot walk: {0}")]
-    MovementError(#[from] MovingError),
-
-    #[error("Insufficient energy for walking: need at least {required}, have {current}")]
-    InsufficientEnergyForWalking {
-        required: EnergyLevel,
-        current: EnergyLevel,
-    },
-}
-
-pub type WalkingResult = Result<String, WalkingError>;
-
-/// Walking capability - depends on Moving trait and energy
-pub trait Walking: Moving + HasEnergy {
-    /// Basic walking
-    fn walk(&mut self) -> WalkingResult {
-        let current_energy = self.energy();
-
-        // Walking requires at least Exhausted energy level
-        let required_energy = EnergyLevel::Exhausted;
-        if current_energy < required_energy {
-            return Err(WalkingError::InsufficientEnergyForWalking {
-                required: required_energy,
-                current: current_energy,
-            });
-        }
-
-        // Walking consumes energy
-        self.consume_energy();
-
-        // Use basic movement as foundation
-        match self.do_move() {
-            Ok(_) => Ok("Entity walks".to_string()),
-            Err(movement_error) => Err(WalkingError::MovementError(movement_error)),
-        }
+/// Walking capability - uses LandMove as foundation
+pub trait Walking: LandMove {
+    /// Basic walking - uses land_move
+    fn walk(&mut self) -> LandMoveResult {
+        // Walking is just basic land movement for biological entities
+        self.land_move()
     }
 
-    /// Running - faster but more energy-intensive
-    fn run(&mut self) -> WalkingResult {
-        let current_energy = self.energy();
-
-        // Running requires Normal energy level
-        let required_energy = EnergyLevel::Normal;
-        if current_energy < required_energy {
-            return Err(WalkingError::InsufficientEnergyForWalking {
-                required: required_energy,
-                current: current_energy,
-            });
-        }
-
-        // Running consumes more energy
-        self.consume_energy_levels(2);
-
-        // Use basic movement as foundation
-        match self.do_move() {
-            Ok(_) => Ok("Entity runs".to_string()),
-            Err(movement_error) => Err(WalkingError::MovementError(movement_error)),
-        }
+    /// Running - faster but more energy-intensive - uses land_move_fast
+    fn run(&mut self) -> LandMoveResult {
+        // Running is fast land movement for biological entities
+        self.land_move_fast()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::behaviors::land_move::LandMoveError;
+    use crate::behaviors::moving::Moving;
+    use crate::core::{EnergyLevel, HasEnergy};
 
     #[derive(Debug)]
     struct TestWalker {
@@ -91,6 +44,7 @@ mod tests {
     }
 
     impl Moving for TestWalker {}
+    impl LandMove for TestWalker {}
     impl Walking for TestWalker {}
 
     #[test]
@@ -99,10 +53,10 @@ mod tests {
 
         let result = walker.walk();
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "Entity walks");
+        assert_eq!(result.unwrap(), "Entity moves on land");
 
-        // Energy should be consumed (walk + move = 2 total)
-        assert_eq!(walker.energy(), EnergyLevel::Exhausted);
+        // Energy should be consumed (move = 1 level)
+        assert_eq!(walker.energy(), EnergyLevel::Tired);
     }
 
     #[test]
@@ -112,11 +66,11 @@ mod tests {
         let result = walker.walk();
         assert!(result.is_err());
 
-        if let Err(WalkingError::InsufficientEnergyForWalking { required, current }) = result {
+        if let Err(LandMoveError::InsufficientEnergyForLandMove { required, current }) = result {
             assert_eq!(required, EnergyLevel::Exhausted);
             assert_eq!(current, EnergyLevel::Collapsed);
         } else {
-            panic!("Expected InsufficientEnergyForWalking error");
+            panic!("Expected InsufficientEnergyForLandMove error");
         }
     }
 
@@ -126,10 +80,10 @@ mod tests {
 
         let result = walker.run();
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "Entity runs");
+        assert_eq!(result.unwrap(), "Entity moves fast on land");
 
-        // Energy should be consumed (run consumes 2 + move consumes 1 = 3 total)
-        assert_eq!(walker.energy(), EnergyLevel::Exhausted);
+        // Energy should be consumed (move + fast = 2 levels)
+        assert_eq!(walker.energy(), EnergyLevel::Tired);
     }
 
     #[test]
@@ -139,11 +93,11 @@ mod tests {
         let result = walker.run();
         assert!(result.is_err());
 
-        if let Err(WalkingError::InsufficientEnergyForWalking { required, current }) = result {
+        if let Err(LandMoveError::InsufficientEnergyForLandMove { required, current }) = result {
             assert_eq!(required, EnergyLevel::Normal);
             assert_eq!(current, EnergyLevel::Tired);
         } else {
-            panic!("Expected InsufficientEnergyForWalking error");
+            panic!("Expected InsufficientEnergyForLandMove error");
         }
     }
 
@@ -165,8 +119,6 @@ mod tests {
         let mut walker = TestWalker::new(EnergyLevel::Exhausted);
 
         let result = walker.walk();
-
-        assert!(result.is_err());
-        assert_eq!(walker.energy(), EnergyLevel::Collapsed);
+        assert!(result.is_ok());
     }
 }

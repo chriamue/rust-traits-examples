@@ -1,5 +1,6 @@
-use crate::behaviors::moving::{Moving, MovingError};
-use crate::core::{EnergyLevel, HasEnergy, Terrain};
+use crate::behaviors::land_move::LandMove;
+use crate::behaviors::moving::MovingError;
+use crate::core::{EnergyLevel, Terrain};
 use thiserror::Error;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -146,8 +147,8 @@ pub enum DrivingError {
 
 pub type DrivingResult = Result<String, DrivingError>;
 
-/// Driving capability - depends on Moving trait and energy
-pub trait Driving: Moving + HasEnergy {
+/// Driving capability - uses LandMove as foundation and adds vehicle-specific features
+pub trait Driving: LandMove {
     /// Maximum driving speed in km/h - varies by implementation
     fn max_speed(&self) -> u32;
 
@@ -166,36 +167,21 @@ pub trait Driving: Moving + HasEnergy {
         3 // Default: moderate driving skill (1-5 scale)
     }
 
-    /// Basic driving
+    /// Basic driving - uses land_move
     fn drive(&mut self) -> DrivingResult {
-        let current_energy = self.energy();
-
-        // Driving requires at least Tired energy level
-        let required_energy = EnergyLevel::Tired;
-        if current_energy < required_energy {
-            return Err(DrivingError::InsufficientEnergyForDriving {
-                required: required_energy,
-                current: current_energy,
-            });
-        }
-
-        // Driving consumes energy beyond basic movement
-        self.consume_energy(); // Extra cost for driving
-
-        // Use basic movement as foundation
-        match self.do_move() {
-            Ok(_) => {
-                let drive_description = match current_energy {
-                    EnergyLevel::Tired => "drives slowly and carefully",
-                    EnergyLevel::Normal => "drives at steady pace",
-                    EnergyLevel::Energetic => "drives smoothly with confidence",
-                    EnergyLevel::Hyperactive => "drives with impressive performance",
-                    _ => unreachable!(),
-                };
-
-                Ok(format!("Entity {}", drive_description))
-            }
-            Err(movement_error) => Err(DrivingError::MovementError(movement_error)),
+        // Driving is basic land movement for vehicles
+        match self.land_move() {
+            Ok(_) => Ok("Entity drives".to_string()),
+            Err(e) => Err(DrivingError::MovementError(match e {
+                crate::behaviors::land_move::LandMoveError::MovementError(me) => me,
+                crate::behaviors::land_move::LandMoveError::InsufficientEnergyForLandMove {
+                    required,
+                    current,
+                } => {
+                    // Convert to generic movement error
+                    return Err(DrivingError::InsufficientEnergyForDriving { required, current });
+                }
+            })),
         }
     }
 
@@ -387,6 +373,7 @@ pub trait Driving: Moving + HasEnergy {
 mod tests {
     use super::*;
     use crate::behaviors::moving::Moving;
+    use crate::core::HasEnergy;
 
     #[derive(Debug)]
     struct TestVehicle {
@@ -406,6 +393,7 @@ mod tests {
     }
 
     impl Moving for TestVehicle {}
+    impl LandMove for TestVehicle {}
 
     impl Driving for TestVehicle {
         fn max_speed(&self) -> u32 {
@@ -432,7 +420,7 @@ mod tests {
 
         let result = vehicle.drive();
         assert!(result.is_ok());
-        assert_eq!(vehicle.energy(), EnergyLevel::Exhausted); // Energy consumed
+        assert_eq!(vehicle.energy(), EnergyLevel::Tired); // Energy consumed
     }
 
     #[test]
