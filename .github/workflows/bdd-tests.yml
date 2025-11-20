@@ -1,0 +1,164 @@
+name: BDD Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+jobs:
+  bdd-tests:
+    name: BDD Feature Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+            bdd-tests/target
+          key: ${{ runner.os }}-bdd-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build main project
+        run: cargo build
+
+      - name: Run BDD tests
+        working-directory: bdd-tests
+        run: |
+          mkdir -p target
+          cargo test --test bdd_tests || true
+        continue-on-error: true
+
+      - name: Generate HTML report
+        run: node scripts/generate-bdd-report.js || true
+        continue-on-error: true
+
+      # Option 1: dorny/test-reporter (Recommended)
+      - name: Publish Test Report (dorny)
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: 🧪 BDD Test Results
+          path: "bdd-tests/target/junit-report.xml"
+          reporter: java-junit
+          fail-on-error: false
+          max-annotations: 50
+
+      # Option 2: EnricoMi (Alternative - comment out if using dorny)
+      # - name: Publish Test Results (EnricoMi)
+      #   uses: EnricoMi/publish-unit-test-result-action@v2
+      #   if: always()
+      #   with:
+      #     files: 'bdd-tests/target/junit-report.xml'
+      #     check_name: BDD Test Results
+      #     fail_on: nothing
+
+      - name: Parse results for summary
+        id: results
+        if: always()
+        run: |
+          if [ -f bdd-tests/target/cucumber-report.json ]; then
+            TOTAL=$(jq '[.[].elements | length] | add // 0' bdd-tests/target/cucumber-report.json)
+            FEATURES=$(jq 'length' bdd-tests/target/cucumber-report.json)
+            PASSED=0
+            FAILED=0
+
+            for scenario in $(jq -r '.[] | .elements[] | @json' bdd-tests/target/cucumber-report.json); do
+              if echo "$scenario" | jq -e '.steps | all(.result.status == "passed")' > /dev/null 2>&1; then
+                PASSED=$((PASSED + 1))
+              else
+                FAILED=$((FAILED + 1))
+              fi
+            done
+
+            echo "total_scenarios=$TOTAL" >> $GITHUB_OUTPUT
+            echo "total_features=$FEATURES" >> $GITHUB_OUTPUT
+            echo "passed=$PASSED" >> $GITHUB_OUTPUT
+            echo "failed=$FAILED" >> $GITHUB_OUTPUT
+
+            if [ "$TOTAL" -gt 0 ]; then
+              SUCCESS_RATE=$(echo "scale=1; ($PASSED * 100) / $TOTAL" | bc)
+            else
+              SUCCESS_RATE=0
+            fi
+            echo "success_rate=$SUCCESS_RATE" >> $GITHUB_OUTPUT
+          else
+            echo "total_scenarios=0" >> $GITHUB_OUTPUT
+            echo "total_features=0" >> $GITHUB_OUTPUT
+            echo "passed=0" >> $GITHUB_OUTPUT
+            echo "failed=0" >> $GITHUB_OUTPUT
+            echo "success_rate=0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate test summary
+        if: always()
+        run: |
+          echo "# 🧪 BDD Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Features | ${{ steps.results.outputs.total_features }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Scenarios | ${{ steps.results.outputs.total_scenarios }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Passed | ✅ ${{ steps.results.outputs.passed }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Failed | ❌ ${{ steps.results.outputs.failed }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Success Rate | ${{ steps.results.outputs.success_rate }}% |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📊 [View detailed report in Checks tab](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/checks)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bdd-test-reports
+          path: |
+            bdd-tests/target/cucumber-report.json
+            bdd-tests/target/junit-report.xml
+            bdd-tests/target/bdd-report.html
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const passed = '${{ steps.results.outputs.passed }}';
+            const failed = '${{ steps.results.outputs.failed }}';
+            const rate = '${{ steps.results.outputs.success_rate }}';
+
+            const body = `## 🧪 BDD Test Results
+
+            ${failed === '0' ? '✅' : '⚠️'} **Success Rate: ${rate}%**
+
+            | Status | Count |
+            |--------|-------|
+            | ✅ Passed | ${passed} |
+            | ❌ Failed | ${failed} |
+
+            📊 [View detailed results in Checks tab](https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}/checks)
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
