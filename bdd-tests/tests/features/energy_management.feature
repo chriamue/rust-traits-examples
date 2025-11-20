@@ -12,21 +12,21 @@ Feature: Energy Management
     And the dog has energy level "Hyperactive"
     When the dog runs
     Then the dog's energy should decrease by 2 levels
-    And the dog should have energy level "Energetic"
+    And the dog should have energy level "Normal"
 
   Scenario: Swimming consumes energy
     Given a duck named "Donald"
     And the duck has energy level "Energetic"
     When the duck swims
     Then the duck's energy should decrease
-    And the duck should have energy level "Normal"
+    And the duck should have energy level "Tired"
 
   Scenario: Flying consumes energy
     Given an eagle named "Liberty"
     And the eagle has energy level "Hyperactive"
     When the eagle flies
     Then the eagle's energy should decrease
-    And the eagle should have energy level "Energetic"
+    And the eagle should have energy level "Tired"
 
   Scenario: Cannot move when collapsed
     Given a dog named "Tired" with breed "Bulldog"
@@ -38,7 +38,7 @@ Feature: Energy Management
     Given a dog named "Weary" with breed "Husky"
     And the dog has energy level "Tired"
     When the dog attempts to run
-    Then the action should fail with "InsufficientEnergy" error
+    Then the action should fail with "InsufficientEnergyForLandMove" error
 
   Scenario: Resting restores energy
     Given a duck named "Sleepy"

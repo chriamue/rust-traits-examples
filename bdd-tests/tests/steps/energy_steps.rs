@@ -118,6 +118,22 @@ async fn energy_should_decrease(world: &mut TraitsWorld) {
     );
 }
 
+#[then(expr = "the duck's energy should decrease")]
+async fn duck_energy_should_decrease(world: &mut TraitsWorld) {
+    assert!(
+        world.energy_after.unwrap() < world.energy_before.unwrap(),
+        "Duck's energy should decrease after activity"
+    );
+}
+
+#[then(expr = "the eagle's energy should decrease")]
+async fn eagle_energy_should_decrease(world: &mut TraitsWorld) {
+    assert!(
+        world.energy_after.unwrap() < world.energy_before.unwrap(),
+        "Eagle's energy should decrease after activity"
+    );
+}
+
 #[then(expr = "the dog's energy should decrease by {int} levels")]
 async fn energy_should_decrease_by(world: &mut TraitsWorld, levels: i32) {
     let before = world.energy_before.unwrap() as i32;
@@ -167,5 +183,60 @@ async fn duck_should_have_energy(world: &mut TraitsWorld, level: String) {
         expected,
         "Duck should have {} energy",
         level
+    );
+}
+
+#[then(expr = "the eagle should have energy level {string}")]
+async fn eagle_should_have_energy(world: &mut TraitsWorld, level: String) {
+    let expected = match level.as_str() {
+        "Collapsed" => EnergyLevel::Collapsed,
+        "Exhausted" => EnergyLevel::Exhausted,
+        "Tired" => EnergyLevel::Tired,
+        "Normal" => EnergyLevel::Normal,
+        "Energetic" => EnergyLevel::Energetic,
+        "Hyperactive" => EnergyLevel::Hyperactive,
+        _ => EnergyLevel::Normal,
+    };
+
+    assert_eq!(
+        world.eagle.as_ref().unwrap().energy(),
+        expected,
+        "Eagle should have {} energy",
+        level
+    );
+}
+
+#[then(expr = "the action should fail with {string} error")]
+async fn action_should_fail_with_error(world: &mut TraitsWorld, error_type: String) {
+    assert!(world.last_result.is_some(), "No action was performed");
+
+    let result = world.last_result.as_ref().unwrap();
+    assert!(result.is_err(), "Action should have failed but succeeded");
+
+    let error_msg = result.as_ref().unwrap_err();
+
+    // Map error type names to patterns in the actual error messages
+    let expected_pattern = match error_type.as_str() {
+        "Collapsed" => "collapsed",
+        "InsufficientEnergy" => "Insufficient energy",
+        "InsufficientEnergyForLandMove" => "Insufficient energy for land movement",
+        _ => error_type.as_str(),
+    };
+
+    assert!(
+        error_msg
+            .to_lowercase()
+            .contains(&expected_pattern.to_lowercase()),
+        "Expected error containing '{}' but got '{}'",
+        expected_pattern,
+        error_msg
+    );
+}
+
+#[then(expr = "the duck's energy should increase")]
+async fn duck_energy_should_increase(world: &mut TraitsWorld) {
+    assert!(
+        world.energy_after.unwrap() > world.energy_before.unwrap(),
+        "Duck's energy should increase after resting"
     );
 }

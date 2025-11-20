@@ -1,7 +1,5 @@
 use crate::TraitsWorld;
-use cucumber::{given, then, when};
-use rust_traits_examples::behaviors::*;
-use rust_traits_examples::core::*;
+use cucumber::{given, then};
 use rust_traits_examples::vehicles::*;
 
 #[given(expr = "a car named {string} with manufacturer {string} and year {int}")]
