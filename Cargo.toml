@@ -1,3 +1,6 @@
+[workspace]
+members = [".", "bdd-tests"]
+
 [package]
 name = "rust-traits-examples"
 version = "0.1.0"

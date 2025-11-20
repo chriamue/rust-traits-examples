@@ -1,0 +1,36 @@
+# Justfile for Rust Traits Examples BDD Tests
+
+# Default recipe
+default:
+    @just --list
+
+# Build the tests package
+build:
+    cargo build
+
+# Run all BDD tests
+test:
+    cargo test --test bdd_tests
+
+# Run BDD tests with output
+test-verbose:
+    cargo test --test bdd_tests -- --nocapture
+
+# Generate test report
+report:
+    @echo "📊 BDD Test Report"
+    @echo "=================="
+    cargo test --test bdd_tests -- --format json | jq -r '.["test-results"][] | select(.result == "passed") | .name' | wc -l | xargs -I {} echo "Passed: {}"
+    cargo test --test bdd_tests -- --format json | jq -r '.["test-results"][] | select(.result == "failed") | .name' | wc -l | xargs -I {} echo "Failed: {}"
+
+# List all features
+list-features:
+    @echo "Available BDD Features:"
+    @echo "======================"
+    @ls -1 tests/features/*.feature | xargs -I {} basename {} .feature
+
+# List all scenarios
+list-scenarios:
+    @echo "All Test Scenarios:"
+    @echo "==================="
+    @grep -h "Scenario:" tests/features/*.feature | sed 's/  Scenario: /- /'
