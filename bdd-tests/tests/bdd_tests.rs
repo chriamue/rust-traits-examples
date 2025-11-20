@@ -82,7 +82,7 @@ async fn main() {
             writer::Basic::raw(
                 io::stdout(),
                 writer::Coloring::Auto,
-                writer::Verbosity::Default,
+                writer::Verbosity::ShowWorldAndDocString
             )
             .summarized()
             .normalized()
