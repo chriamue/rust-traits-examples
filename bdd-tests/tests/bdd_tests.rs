@@ -69,32 +69,41 @@ async fn main() {
     // Ensure target directory exists
     std::fs::create_dir_all("target").ok();
 
-    // Create file writers
-    let json_file =
-        File::create("target/cucumber-report.json").expect("Failed to create JSON report file");
-    let junit_file =
-        File::create("target/junit-report.xml").expect("Failed to create JUnit report file");
+    #[cfg(feature = "libtest")]
+    {
+        // Libtest mode - simple output, no file reports
+        println!("🧪 Running in libtest mode");
+        TraitsWorld::cucumber()
+            .max_concurrent_scenarios(1)
+            .with_writer(writer::Libtest::or_basic())
+            .run("tests/features")
+            .await;
+    }
 
-    // Run with file outputs only (cucumber shows basic output to console by default)
-    TraitsWorld::cucumber()
-        .max_concurrent_scenarios(1)
-        .with_writer(
-            writer::Basic::raw(
-                io::stdout(),
-                writer::Coloring::Auto,
-                writer::Verbosity::ShowWorldAndDocString
+    #[cfg(not(feature = "libtest"))]
+    {
+        // Default mode - rich output with file reports
+        let json_file =
+            File::create("target/cucumber-report.json").expect("Failed to create JSON report file");
+        let junit_file =
+            File::create("target/junit-report.xml").expect("Failed to create JUnit report file");
+
+        TraitsWorld::cucumber()
+            .max_concurrent_scenarios(1)
+            .with_writer(
+                writer::Basic::raw(io::stdout(), writer::Coloring::Auto, 0)
+                    .summarized()
+                    .normalized()
+                    .tee::<TraitsWorld, _>(writer::Json::new(json_file))
+                    .tee::<TraitsWorld, _>(writer::JUnit::new(junit_file, 0)),
             )
-            .summarized()
-            .normalized()
-            .tee::<TraitsWorld, _>(writer::Json::new(json_file))
-            .tee::<TraitsWorld, _>(writer::JUnit::new(junit_file, 0)),
-        )
-        .run("tests/features")
-        .await;
+            .run("tests/features")
+            .await;
 
-    // Print summary to console after tests complete
-    println!("\n✅ BDD tests completed!");
-    println!("📊 Reports generated:");
-    println!("   - JSON: target/cucumber-report.json");
-    println!("   - JUnit: target/junit-report.xml");
+        // Print summary
+        println!("\n✅ BDD tests completed!");
+        println!("📊 Reports generated:");
+        println!("   - JSON: target/cucumber-report.json");
+        println!("   - JUnit: target/junit-report.xml");
+    }
 }

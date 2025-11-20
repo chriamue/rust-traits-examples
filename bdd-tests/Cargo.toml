@@ -9,12 +9,15 @@ keywords = ["traits", "tests", "bdd", "cucumber"]
 categories = ["development-tools::testing"]
 
 [dependencies]
-cucumber = { version = "0.21.1", features = ["output-json", "output-junit"] }
+cucumber = { version = "0.21.1", features = ["output-json", "output-junit", "libtest"] }
 rust-traits-examples = { path = ".." }
 tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
 
 [dev-dependencies]
 tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
+
+[features]
+libtest = []
 
 [[test]]
 name = "bdd_tests"
