@@ -1,4 +1,5 @@
 use cucumber::World;
+use cucumber::WriterExt;
 use rust_traits_examples::animals::*;
 use rust_traits_examples::core::*;
 use rust_traits_examples::vehicles::*;
@@ -63,8 +64,23 @@ impl Default for TraitsWorld {
 
 #[tokio::main]
 async fn main() {
+    use std::fs::File;
+
+    // Ensure target directory exists
+    std::fs::create_dir_all("target").ok();
+
+    // Create writers
+    let json_file =
+        File::create("target/cucumber-report.json").expect("Failed to create JSON report file");
+    let junit_file =
+        File::create("target/junit-report.xml").expect("Failed to create JUnit report file");
+
+    // Run with JSON and JUnit outputs
     TraitsWorld::cucumber()
         .max_concurrent_scenarios(1)
-        .run_and_exit("tests/features")
+        .with_writer(
+            cucumber::writer::Json::new(json_file).tee(cucumber::writer::JUnit::new(junit_file, 0)),
+        )
+        .run("tests/features")
         .await;
 }
