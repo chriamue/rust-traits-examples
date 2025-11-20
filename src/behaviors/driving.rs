@@ -109,7 +109,7 @@ impl From<&str> for RoadType {
             "suburban" => RoadType::Suburban,
             "mountain" => RoadType::Mountain,
             "off_road" | "offroad" => RoadType::OffRoad,
-            "extreme_terrain" | "extreme" => RoadType::ExtremeOff,
+            "extreme_terrain" | "extreme" | "extremeoff" => RoadType::ExtremeOff,
             _ => RoadType::Country, // Default fallback
         }
     }

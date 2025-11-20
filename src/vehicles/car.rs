@@ -149,4 +149,9 @@ impl Driving for Car {
             EngineType::Diesel { .. } => 70,    // Diesel is more efficient than gasoline
         }
     }
+
+    // Add this method to explicitly indicate no off-road capability
+    fn has_off_road_capability(&self) -> bool {
+        false // Regular cars cannot handle off-road terrain
+    }
 }
